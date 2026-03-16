@@ -1,4 +1,4 @@
-# Acong
+# Acong-AI
 
 Acong is a production-oriented V1 AI chat app built with Next.js, Supabase, OpenAI, Tailwind, shadcn/ui, Framer Motion, and Mayar. The app enforces a credit wallet on every successful send/regenerate, grants 5 free credits on first login, supports image attachments, and keeps the assistant persona sarcastic but not genuinely harmful.
 
