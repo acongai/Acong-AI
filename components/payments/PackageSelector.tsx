@@ -1,0 +1,73 @@
+"use client"
+
+import { motion } from "framer-motion"
+
+import { COPY } from "@/lib/copy"
+import { cn } from "@/lib/utils"
+
+interface PackageOption {
+  code: "package_basic" | "package_pro"
+  credits: number
+  priceIdr: number
+}
+
+interface PackageSelectorProps {
+  onSelect: (code: "package_basic" | "package_pro") => void
+  packages: PackageOption[]
+  selectedCode: "package_basic" | "package_pro"
+}
+
+function formatIdr(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    currency: "IDR",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(value)
+}
+
+export function PackageSelector({
+  onSelect,
+  packages,
+  selectedCode,
+}: PackageSelectorProps) {
+  return (
+    <div className="grid gap-3">
+      {packages.map((item, index) => {
+        const active = selectedCode === item.code
+
+        return (
+          <motion.button
+            animate={{ opacity: 1, y: 0 }}
+            className={cn(
+              "rounded-lg border p-4 text-left transition-colors",
+              active
+                ? "border-[#111111] bg-white"
+                : "border-[#E4E4E4] bg-[#F8F8F8] hover:border-[#111111]",
+            )}
+            initial={{ opacity: 0, y: 12 }}
+            key={item.code}
+            onClick={() => onSelect(item.code)}
+            transition={{ delay: index * 0.04, duration: 0.2 }}
+            type="button"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#999999]">
+                  {item.code === "package_basic"
+                    ? COPY.packageBasicName
+                    : COPY.packageProName}
+                </p>
+                <p className="mt-2 text-xl font-semibold text-[#111111]">
+                  {item.credits} kredit
+                </p>
+              </div>
+              <span className="text-sm font-medium text-[#666666]">
+                {formatIdr(item.priceIdr)}
+              </span>
+            </div>
+          </motion.button>
+        )
+      })}
+    </div>
+  )
+}
