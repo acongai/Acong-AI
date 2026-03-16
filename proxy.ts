@@ -6,7 +6,7 @@ import { updateSession } from "@/supabase/middleware"
 
 const PUBLIC_PATHS = ["/login", "/auth/callback"]
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const { response, user } = await updateSession(request)
 
@@ -27,7 +27,6 @@ export async function middleware(request: NextRequest) {
 
   return response
 }
-
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 }
