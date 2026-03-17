@@ -54,6 +54,7 @@ export interface Database {
           signup_fingerprint: string | null
           signup_user_agent: string | null
           status: string | null
+          current_plan: string | null
         }
         Insert: {
           id: string
@@ -66,6 +67,7 @@ export interface Database {
           signup_fingerprint?: string | null
           signup_user_agent?: string | null
           status?: string | null
+          current_plan?: string | null
         }
         Update: {
           id?: string
@@ -78,6 +80,7 @@ export interface Database {
           signup_fingerprint?: string | null
           signup_user_agent?: string | null
           status?: string | null
+          current_plan?: string | null
         }
         Relationships: []
       }

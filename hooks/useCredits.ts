@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 
+import { createClient } from "@/supabase/client"
 import { COPY } from "@/lib/copy"
 
 interface CreditsState {
@@ -101,6 +102,31 @@ export function useCredits() {
       cancelled = true
     }
   }, [refreshTick])
+
+  // Sync credits with auth state: reset on logout, refresh on login
+  useEffect(() => {
+    const supabase = createClient()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        setState({
+          balance: null,
+          error: null,
+          hasCredits: false,
+          isLoading: false,
+          lowCredits: false,
+        })
+      } else if (event === "SIGNED_IN") {
+        setRefreshTick((current) => current + 1)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
 
   return {
     ...state,

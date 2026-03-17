@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { Sidebar } from "@/components/chat/Sidebar"
 import { MobileDrawer } from "@/components/layout/MobileDrawer"
+import { PricingPopup } from "@/components/payments/PricingPopup"
 import { useAuth } from "@/hooks/useAuth"
 import { useThread } from "@/hooks/useThread"
 import { COPY } from "@/lib/copy"
@@ -23,6 +24,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const [pricingOpen, setPricingOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -71,6 +73,14 @@ export function AppShell({ children }: AppShellProps) {
     }
 
     if (previousAuthUserIdRef.current !== currentUserId) {
+      // User just logged in (was null, now has id) — show pricing popup once per session
+      if (!previousAuthUserIdRef.current && currentUserId) {
+        if (!sessionStorage.getItem("pricing_shown")) {
+          sessionStorage.setItem("pricing_shown", "1")
+          setPricingOpen(true)
+        }
+      }
+
       previousAuthUserIdRef.current = currentUserId
       refreshThreads()
     }
@@ -124,14 +134,20 @@ export function AppShell({ children }: AppShellProps) {
         />
       </MobileDrawer>
 
-      <div className="min-h-[calc(100vh-1rem)] md:pl-[260px]">
-        <main>{children}</main>
+      <div className="h-[calc(100vh-1rem)] overflow-hidden md:pl-[260px]">
+        <main className="h-full">{children}</main>
       </div>
 
       <LoginModal
         errorMessage={authError ? COPY.dialogs.oauthError : null}
         onOpenChange={handleLoginOpenChange}
         open={loginOpen || loginRequestedFromUrl}
+      />
+
+      <PricingPopup
+        isOpen={pricingOpen}
+        mode="onboarding"
+        onClose={() => setPricingOpen(false)}
       />
     </div>
   )

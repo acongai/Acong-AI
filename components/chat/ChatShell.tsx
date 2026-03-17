@@ -73,11 +73,11 @@ export function ChatShell({ threadId }: ChatShellProps) {
   return (
     <>
       <div
-        className="bg-[#F2F2F2]"
+        className="h-full bg-[#F2F2F2]"
         style={{ backgroundImage: "radial-gradient(circle, #00000026 1px, transparent 1px)", backgroundSize: "24px 24px" }}
       >
       {hasMessages ? (
-        <section className="flex min-h-[calc(100vh-3.5rem)] flex-col">
+        <section className="flex h-full flex-col">
           {error ? (
             <div className="px-4 pt-4 sm:px-6 lg:px-8">
               <div className="mx-auto max-w-4xl">
@@ -107,7 +107,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
         </section>
       ) : (
         <section
-          className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-4"
+          className="flex h-full flex-col items-center justify-center px-4"
         >
           {error ? (
             <div className="mb-6 w-full max-w-2xl">

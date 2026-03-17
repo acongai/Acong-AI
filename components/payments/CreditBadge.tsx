@@ -10,6 +10,7 @@ interface CreditBadgeProps {
   error?: string | null
   isLoading?: boolean
   lowCredits?: boolean
+  onClick?: () => void
 }
 
 export function CreditBadge({
@@ -17,27 +18,25 @@ export function CreditBadge({
   error,
   isLoading = false,
   lowCredits = false,
+  onClick,
 }: CreditBadgeProps) {
   const balanceLabel = balance !== null ? balance : 0
 
   if (isLoading) {
-    return <Skeleton className="h-8 w-[120px] rounded bg-[#E4E4E4]" />
+    return <Skeleton className="h-5 w-16 rounded bg-[#E4E4E4]" />
   }
 
   return (
-    <div className="flex items-center gap-2 rounded border border-[#E4E4E4] bg-white px-3 py-1.5">
-      <Coins className="h-4 w-4 text-[#666666]" />
-      <div>
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[#999999]">
-          {COPY.badge.credits}
-        </p>
-        <p className="text-[13px] font-medium text-[#111111]">
-          {balanceLabel}
-        </p>
-      </div>
+    <button
+      className="flex cursor-pointer items-center gap-1.5 text-sm text-[#666666]"
+      onClick={onClick}
+      type="button"
+    >
+      <Coins className="h-4 w-4" />
+      <span className="font-semibold text-[#111111]">{balanceLabel}</span>
 
       {lowCredits ? (
-        <span className="flex items-center gap-1 text-xs text-[#F76B15]">
+        <span className="flex items-center gap-0.5 text-xs text-[#F76B15]">
           <TriangleAlert className="h-3.5 w-3.5" />
           {COPY.badge.low}
         </span>
@@ -46,6 +45,6 @@ export function CreditBadge({
       {error ? (
         <span className="text-xs text-[#F76B15]">{error}</span>
       ) : null}
-    </div>
+    </button>
   )
 }

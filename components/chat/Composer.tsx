@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useEffectEvent, useRef } from "react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
 import { RotateCcw, SendHorizontal } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { CreditBadge } from "@/components/payments/CreditBadge"
+import { PricingPopup } from "@/components/payments/PricingPopup"
 import { COPY } from "@/lib/copy"
 import { useCredits } from "@/hooks/useCredits"
 
@@ -32,6 +33,7 @@ export function Composer({
 }: ComposerProps) {
   const canSend = value.trim().length > 0 && !disabled && !isSubmitting
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [pricingOpen, setPricingOpen] = useState(false)
   const credits = useCredits()
   const handleCreditDeducted = useEffectEvent(() => {
     credits.refresh()
@@ -89,6 +91,7 @@ export function Composer({
             error={credits.error}
             isLoading={credits.isLoading}
             lowCredits={credits.lowCredits}
+            onClick={() => setPricingOpen(true)}
           />
 
           <Button
@@ -109,15 +112,32 @@ export function Composer({
     </div>
   )
 
+  const pricingPopup = (
+    <PricingPopup
+      isOpen={pricingOpen}
+      mode="manage"
+      onClose={() => setPricingOpen(false)}
+      onPlanSelected={credits.refresh}
+    />
+  )
+
   if (variant === "centered") {
-    return <div className="w-full">{box}</div>
+    return (
+      <>
+        <div className="w-full">{box}</div>
+        {pricingPopup}
+      </>
+    )
   }
 
   return (
-    <div className="sticky bottom-0 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
-        {box}
+    <>
+      <div className="sticky bottom-0 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          {box}
+        </div>
       </div>
-    </div>
+      {pricingPopup}
+    </>
   )
 }
