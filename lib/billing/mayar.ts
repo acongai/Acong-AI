@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from "node:crypto"
 
 import { orchestrateTextReply } from "@/lib/ai/orchestrator"
 import {
@@ -87,17 +86,7 @@ function getRequiredEnv(name: string) {
 }
 
 function getMayarApiBaseUrl() {
-  const configured =
-    process.env.MAYAR_BASE_URL?.trim() || "https://api.mayar.id"
-
-  // TODO: Confirm the final production base URL with Mayar credentials.
-  // The public docs currently use https://api.mayar.id/hl/v1/... while the
-  // env template here keeps MAYAR_BASE_URL configurable.
-  if (configured.includes("api.mayar.id")) {
-    return configured.replace(/\/$/, "")
-  }
-
-  return "https://api.mayar.id"
+  return (process.env.MAYAR_BASE_URL?.trim() || "https://api.mayar.id/hl/v1").replace(/\/$/, "")
 }
 
 export function getMayarPackages() {
@@ -111,7 +100,7 @@ export async function createMayarInvoice({
   threadId,
   user,
 }: CreateMayarInvoiceParams): Promise<MayarInvoiceResponse> {
-  const endpoint = `${getMayarApiBaseUrl()}/hl/v1/invoice/create`
+  const endpoint = `${getMayarApiBaseUrl()}/invoice/create`
   const apiKey = getRequiredEnv("MAYAR_API_KEY")
 
   const response = await fetch(endpoint, {
@@ -166,33 +155,37 @@ export async function createMayarInvoice({
   }
 }
 
-function timingSafeMatch(expected: string, actual: string) {
-  const expectedBuffer = Buffer.from(expected)
-  const actualBuffer = Buffer.from(actual)
+/**
+ * Verify a Mayar transaction by calling the Mayar API directly.
+ * Used in lieu of signature verification (Mayar does not send signature headers).
+ * Only returns true if Mayar confirms the invoice is paid.
+ */
+export async function confirmMayarTransactionPaid(externalInvoiceId: string): Promise<boolean> {
+  const apiKey = getRequiredEnv("MAYAR_API_KEY")
+  const endpoint = `${getMayarApiBaseUrl()}/invoice/${externalInvoiceId}`
 
-  if (expectedBuffer.length !== actualBuffer.length) {
+  let response: Response
+  try {
+    response = await fetch(endpoint, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    })
+  } catch {
     return false
   }
 
-  return timingSafeEqual(expectedBuffer, actualBuffer)
-}
-
-export function verifyMayarWebhookSignature(rawBody: string, headers: Headers) {
-  const secret = getRequiredEnv("MAYAR_WEBHOOK_SECRET")
-
-  // TODO: Confirm the exact signature header name and payload canonicalization
-  // from Mayar dashboard/docs for production hardening.
-  const receivedSignature =
-    headers.get("x-mayar-signature") ??
-    headers.get("x-signature") ??
-    headers.get("signature")
-
-  if (!receivedSignature) {
+  if (!response.ok) {
     return false
   }
 
-  const expected = createHmac("sha256", secret).update(rawBody).digest("hex")
-  return timingSafeMatch(expected, receivedSignature)
+  const payload = (await response.json()) as {
+    data?: {
+      status?: boolean | string
+    }
+  }
+
+  return payload.data?.status === "paid"
 }
 
 export function parseMayarWebhookEvent(

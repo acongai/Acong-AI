@@ -2,10 +2,10 @@ import { NextResponse } from "next/server"
 
 import {
   applyPaidPayment,
+  confirmMayarTransactionPaid,
   findPaymentByExternalReference,
   markPaymentState,
   parseMayarWebhookEvent,
-  verifyMayarWebhookSignature,
 } from "@/lib/billing/mayar"
 import { COPY } from "@/lib/copy"
 import { createAdminClient } from "@/lib/db/client"
@@ -15,15 +15,6 @@ export async function POST(request: Request) {
   const rawBody = await request.text()
 
   try {
-    if (!verifyMayarWebhookSignature(rawBody, request.headers)) {
-      return NextResponse.json(
-        {
-          error: COPY.api.webhookInvalidSignature,
-        },
-        { status: 401 },
-      )
-    }
-
     const payload = JSON.parse(rawBody) as unknown
     const parsedEvent = parseMayarWebhookEvent(payload as never)
     const admin = createAdminClient()
@@ -82,6 +73,17 @@ export async function POST(request: Request) {
     }
 
     if (parsedEvent.paymentState === "paid") {
+      const invoiceId = parsedEvent.externalInvoiceId ?? parsedEvent.externalPaymentId
+      const confirmed = invoiceId ? await confirmMayarTransactionPaid(invoiceId) : false
+
+      if (!confirmed) {
+        console.warn("payments_mayar_webhook_unconfirmed", {
+          external_event_id: parsedEvent.externalEventId,
+          invoice_id: invoiceId,
+        })
+        return NextResponse.json({ error: COPY.api.webhookGeneric }, { status: 402 })
+      }
+
       await applyPaidPayment(payment)
     } else if (parsedEvent.paymentState === "failed") {
       await markPaymentState(payment.id, "failed")
