@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Barlow, Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -9,9 +9,18 @@ const inter = Inter({
   weight: ["400", "500", "600"],
 });
 
+const barlow = Barlow({
+  variable: "--font-brand",
+  subsets: ["latin"],
+  weight: ["800"],
+});
+
 export const metadata: Metadata = {
   title: "Acong",
   description: "AI chat app with a sarcastic, reluctant persona.",
+  icons: {
+    icon: "/images/ACONG BETE.png",
+  },
 };
 
 export default function RootLayout({
@@ -22,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${inter.variable} bg-background font-sans text-foreground antialiased`}
+        className={`${inter.variable} ${barlow.variable} bg-background font-sans text-foreground antialiased`}
       >
         {children}
         <Toaster

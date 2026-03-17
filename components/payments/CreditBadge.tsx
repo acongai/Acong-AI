@@ -18,10 +18,7 @@ export function CreditBadge({
   isLoading = false,
   lowCredits = false,
 }: CreditBadgeProps) {
-  const balanceLabel =
-    balance === null && !error
-      ? COPY.badge.preview
-      : balance ?? "-"
+  const balanceLabel = balance !== null ? balance : 0
 
   if (isLoading) {
     return <Skeleton className="h-8 w-[120px] rounded bg-[#E4E4E4]" />

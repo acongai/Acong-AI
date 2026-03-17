@@ -4,7 +4,7 @@ import { ensureAccountSetup } from "@/lib/auth/session"
 import { SIGNUP_FINGERPRINT_COOKIE } from "@/lib/utils/fingerprint"
 import { updateSession } from "@/supabase/middleware"
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"]
+const PUBLIC_PATHS = ["/auth/callback"]
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname

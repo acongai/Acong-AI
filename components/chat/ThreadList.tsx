@@ -1,14 +1,23 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { Trash2 } from "lucide-react"
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { COPY } from "@/lib/copy"
 import { cn } from "@/lib/utils"
 import type { AppThread } from "@/types"
 
 interface ThreadListProps {
   activeThreadId?: string | null
+  onDeleteThread?: (threadId: string) => Promise<void>
   onNavigate?: () => void
   threads: AppThread[]
 }
@@ -41,9 +50,25 @@ function formatThreadTime(value: string) {
 
 export function ThreadList({
   activeThreadId,
+  onDeleteThread,
   onNavigate,
   threads,
 }: ThreadListProps) {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  async function handleConfirmDelete() {
+    if (!pendingDeleteId || !onDeleteThread) return
+
+    setIsDeleting(true)
+    try {
+      await onDeleteThread(pendingDeleteId)
+    } finally {
+      setIsDeleting(false)
+      setPendingDeleteId(null)
+    }
+  }
+
   if (!threads.length) {
     return (
       <div className="rounded-lg border border-dashed border-[#E4E4E4] p-4 text-sm leading-6 text-[#999999]">
@@ -53,45 +78,99 @@ export function ThreadList({
   }
 
   return (
-    <div className="space-y-2">
-      {threads.map((thread, index) => {
-        const active = activeThreadId === thread.id
+    <>
+      <div className="space-y-2">
+        {threads.map((thread, index) => {
+          const active = activeThreadId === thread.id
 
-        return (
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            initial={{ opacity: 0, y: 10 }}
-            key={thread.id}
-            transition={{ delay: index * 0.04, duration: 0.22 }}
-            whileHover={{ scale: 1.01 }}
-          >
-            <Link
-              className={cn(
-                "block rounded-lg border px-4 py-3 transition-colors",
-                active
-                  ? "border-[#D0D0D0] border-l-2 border-l-[#111111] bg-white"
-                  : "border-[#E4E4E4] bg-white hover:bg-[#F8F8F8]",
-              )}
-              href={`/chat/${thread.id}`}
-              onClick={onNavigate}
+          return (
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 10 }}
+              key={thread.id}
+              transition={{ delay: index * 0.04, duration: 0.22 }}
+              whileHover={{ scale: 1.01 }}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-[#111111]">
-                    {thread.title}
-                  </p>
-                  <p className="mt-1 line-clamp-1 text-xs leading-5 text-[#999999]">
-                    {thread.preview}
-                  </p>
+              <Link
+                className={cn(
+                  "group block rounded-lg border px-3 py-2 transition-colors",
+                  active
+                    ? "border-[#D0D0D0] border-l-2 border-l-[#111111] bg-white"
+                    : "border-[#E4E4E4] bg-white hover:bg-[#F8F8F8]",
+                )}
+                href={`/chat/${thread.id}`}
+                onClick={onNavigate}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium text-[#111111]">
+                      {thread.title}
+                    </p>
+                    <p className="truncate text-[11px] leading-4 text-[#999999]">
+                      {thread.preview}
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-1">
+                    <span className="text-[11px] text-[#BBBBBB]">
+                      {formatThreadTime(thread.updatedAt)}
+                    </span>
+
+                    {onDeleteThread && (
+                      <button
+                        className="rounded p-0.5 text-[#CCCCCC] opacity-0 transition-all hover:text-[#E5484D] group-hover:opacity-100"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setPendingDeleteId(thread.id)
+                        }}
+                        title="Hapus chat"
+                        type="button"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <span className="shrink-0 text-xs text-[#999999]">
-                  {formatThreadTime(thread.updatedAt)}
-                </span>
-              </div>
-            </Link>
-          </motion.div>
-        )
-      })}
-    </div>
+              </Link>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteId(null)
+        }}
+        open={pendingDeleteId !== null}
+      >
+        <DialogContent className="border-[#E4E4E4] bg-white text-[#111111] sm:max-w-sm" showCloseButton={false}>
+          <DialogTitle className="text-base font-semibold text-[#111111]">
+            Yakin mau hapus chat ini?
+          </DialogTitle>
+          <DialogDescription className="text-sm text-[#666666]">
+            Chat ini bakal ilang selamanya. Acong pun gak bisa bantu kalau udah gitu.
+          </DialogDescription>
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              className="h-9 rounded border border-[#E4E4E4] px-4 text-sm text-[#666666] transition-colors hover:bg-[#F8F8F8]"
+              disabled={isDeleting}
+              onClick={() => setPendingDeleteId(null)}
+              type="button"
+            >
+              Batal
+            </button>
+            <button
+              className="h-9 rounded bg-[#E5484D] px-4 text-sm font-medium text-white transition-colors hover:bg-[#C93B3F] disabled:opacity-60"
+              disabled={isDeleting}
+              onClick={handleConfirmDelete}
+              type="button"
+            >
+              {isDeleting ? "Menghapus..." : "Hapus"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

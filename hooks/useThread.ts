@@ -32,9 +32,6 @@ interface ThreadStateSnapshot {
   threads: AppThread[]
 }
 
-const PREVIEW_THREADS = COPY.preview.threads
-const DEFAULT_PREVIEW_THREAD_ID = PREVIEW_THREADS[0].id
-
 function getStatusFallback(status?: ChatMessageStatus | null) {
   switch (status) {
     case "generating":
@@ -121,122 +118,6 @@ function toAppThreads(
   }))
 }
 
-function getPreviewThreadId(threadId?: string) {
-  return PREVIEW_THREADS.some((thread) => thread.id === threadId)
-    ? threadId
-    : DEFAULT_PREVIEW_THREAD_ID
-}
-
-function getPreviewConversation(threadId?: string) {
-  const previewThreadId = getPreviewThreadId(threadId)
-
-  if (previewThreadId === "preview-chaos") {
-    return COPY.preview.conversations.chaos
-  }
-
-  if (previewThreadId === "preview-billing") {
-    return COPY.preview.conversations.billing
-  }
-
-  return COPY.preview.conversations.lobby
-}
-
-function minutesAgo(value: number) {
-  return new Date(Date.now() - value * 60 * 1000).toISOString()
-}
-
-function toPreviewMessages(threadId?: string): AppMessage[] {
-  return getPreviewConversation(threadId).map((message, index) => ({
-    id: `${getPreviewThreadId(threadId)}-${index}`,
-    role: message.role,
-    content: message.content,
-    createdAt: minutesAgo((getPreviewConversation(threadId).length - index) * 3),
-  }))
-}
-
-function createPreviewState(threadId?: string): ThreadStateSnapshot {
-  const activePreviewThreadId = getPreviewThreadId(threadId)
-  const conversationsById = new Map(
-    PREVIEW_THREADS.map((thread) => [thread.id, toPreviewMessages(thread.id)]),
-  )
-
-  return {
-    isPreviewMode: true,
-    messages: toPreviewMessages(activePreviewThreadId),
-    threadTitle:
-      PREVIEW_THREADS.find((thread) => thread.id === activePreviewThreadId)
-        ?.title ?? COPY.thread.untitled,
-    threads: PREVIEW_THREADS.map((thread, index) => ({
-      id: thread.id,
-      title: thread.title,
-      preview: thread.preview,
-      updatedAt: minutesAgo((index + 1) * 11),
-      messageCount: conversationsById.get(thread.id)?.length ?? 0,
-    })),
-  }
-}
-
-function pickPreviewReply({
-  input,
-  variant = "default",
-}: {
-  input: string
-  variant?: "default" | "regenerate"
-}) {
-  const normalized = input.trim().toLowerCase()
-  let pool: readonly string[] = COPY.preview.replyGeneric
-
-  if (variant === "regenerate") {
-    pool = COPY.preview.replyRegenerate
-  } else if (/^(halo|hai|hi|woi|oi)\b/.test(normalized)) {
-    pool = COPY.preview.replyGreeting
-  } else if (/(kredit|credit|bayar|harga|paket|dompet)/.test(normalized)) {
-    pool = COPY.preview.replyBilling
-  } else if (normalized.length < 20) {
-    pool = COPY.preview.replyShort
-  }
-
-  const seed = normalized
-    .split("")
-    .reduce((total, character) => total + character.charCodeAt(0), 0)
-
-  return pool[seed % pool.length]
-}
-
-function createPreviewAssistantMessage({
-  input,
-  variant = "default",
-}: {
-  input: string
-  variant?: "default" | "regenerate"
-}): AppMessage {
-  return {
-    id: `preview-assistant-${Date.now()}`,
-    role: "assistant",
-    content: pickPreviewReply({
-      input,
-      variant,
-    }),
-    createdAt: new Date().toISOString(),
-    status: "completed",
-  }
-}
-
-function createPreviewUserMessage(input: string): AppMessage {
-  return {
-    id: `preview-user-${Date.now()}`,
-    role: "user",
-    content: input,
-    createdAt: new Date().toISOString(),
-    status: "sent",
-  }
-}
-
-function sleep(durationMs: number) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, durationMs)
-  })
-}
 
 async function fetchThreadState({
   includeMessages,
@@ -252,7 +133,12 @@ async function fetchThreadState({
   } = await supabase.auth.getSession()
 
   if (!session) {
-    return createPreviewState(threadId)
+    return {
+      isPreviewMode: false,
+      messages: [],
+      threadTitle: null,
+      threads: [],
+    }
   }
 
   const { data: threadRows, error: threadError } = await supabase
@@ -452,50 +338,6 @@ export function useThread({
     }
   }
 
-  async function sendPreviewMessage(content: string) {
-    const activePreviewThreadId = getPreviewThreadId(threadId)
-    const userMessage = createPreviewUserMessage(content)
-
-    setMessages((current) => [...current, userMessage])
-    setThreads((current) =>
-      current.map((thread) =>
-        thread.id === activePreviewThreadId
-          ? {
-              ...thread,
-              messageCount: thread.messageCount + 1,
-              preview: content,
-              updatedAt: userMessage.createdAt ?? new Date().toISOString(),
-            }
-          : thread,
-      ),
-    )
-    setThreadTitle(
-      PREVIEW_THREADS.find((thread) => thread.id === activePreviewThreadId)?.title ??
-        COPY.thread.untitled,
-    )
-
-    await sleep(850)
-
-    const assistantMessage = createPreviewAssistantMessage({
-      input: content,
-    })
-
-    setMessages((current) => [...current, assistantMessage])
-    setThreads((current) =>
-      current.map((thread) =>
-        thread.id === activePreviewThreadId
-          ? {
-              ...thread,
-              messageCount: thread.messageCount + 1,
-              updatedAt: assistantMessage.createdAt ?? new Date().toISOString(),
-            }
-          : thread,
-      ),
-    )
-
-    return "sent" as const
-  }
-
   async function sendMessage(content: string, attachmentIds: string[] = []) {
     const normalized = content.trim()
 
@@ -503,14 +345,21 @@ export function useThread({
       return "idle" as const
     }
 
+    const optimisticId = `optimistic-${Date.now()}`
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: optimisticId,
+        role: "user" as const,
+        content: normalized,
+        createdAt: new Date().toISOString(),
+      },
+    ])
+
     setIsSending(true)
     setError(null)
 
     try {
-      if (isPreviewMode) {
-        return await sendPreviewMessage(normalized)
-      }
-
       const response = await fetch("/api/chat/send", {
         method: "POST",
         headers: {
@@ -578,44 +427,28 @@ export function useThread({
     }
   }
 
+  async function deleteThread(threadIdToDelete: string) {
+    const { error } = await supabase
+      .from("chat_threads")
+      .delete()
+      .eq("id", threadIdToDelete)
+
+    if (error) {
+      throw error
+    }
+
+    await refresh()
+
+    if (threadIdToDelete === threadId) {
+      router.push("/")
+    }
+  }
+
   async function regenerateLastReply() {
     setIsSending(true)
     setError(null)
 
     try {
-      if (isPreviewMode) {
-        const lastUserMessage = [...messages]
-          .reverse()
-          .find((message) => message.role === "user")
-
-        if (!lastUserMessage) {
-          return "idle" as const
-        }
-
-        await sleep(650)
-
-        const regeneratedMessage = createPreviewAssistantMessage({
-          input: lastUserMessage.content,
-          variant: "regenerate",
-        })
-
-        setMessages((current) => {
-          const nextMessages = [...current]
-
-          for (let index = nextMessages.length - 1; index >= 0; index -= 1) {
-            if (nextMessages[index]?.role === "assistant") {
-              nextMessages[index] = regeneratedMessage
-              return nextMessages
-            }
-          }
-
-          nextMessages.push(regeneratedMessage)
-          return nextMessages
-        })
-
-        return "sent" as const
-      }
-
       const response = await fetch("/api/chat/regenerate", {
         method: "POST",
         headers: {
@@ -674,6 +507,7 @@ export function useThread({
   return {
     closeLoginPrompt: () => setLoginPromptOpen(false),
     closePaymentPrompt: () => setPaymentPrompt(null),
+    deleteThread,
     error,
     isLoading,
     isPreviewMode,

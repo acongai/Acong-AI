@@ -103,10 +103,38 @@
   }
 }
 
+@keyframes rotate-glow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.composer-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7c3aed, #2563eb, #7c3aed, #2563eb);
+  background-size: 300% 300%;
+  animation: rotate-glow 4s linear infinite;
+  z-index: -1;
+  opacity: 0.6;
+  filter: blur(6px);
+}
+
 @layer base {
+  button,
+  [role="button"],
+  a,
+  label[for],
+  select,
+  summary {
+    cursor: pointer;
+  }
+
   ::selection {
-    background: #111111;
-    color: #ffffff;
+    background: #c8d8ff;
+    color: #1a1a2e;
   }
 
   ::-webkit-scrollbar {

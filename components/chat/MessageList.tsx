@@ -21,7 +21,7 @@ export function MessageList({
   messages,
 }: MessageListProps) {
   return (
-    <div className="flex-1 overflow-hidden bg-[#F2F2F2]">
+    <div className="flex-1 overflow-hidden">
       <ScrollArea className="h-full">
         <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col justify-end gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
           {messages.length ? (
