@@ -55,10 +55,11 @@ export function ChatShell({ threadId }: ChatShellProps) {
   }, [])
 
   async function handleSubmit(value: string) {
+    setDraft("")
     const result = await sendMessage(value)
 
-    if (result !== "login_required") {
-      setDraft("")
+    if (result === "login_required") {
+      setDraft(value)
     }
 
     if (result === "sent") {

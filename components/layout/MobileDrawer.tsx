@@ -27,7 +27,7 @@ export function MobileDrawer({
         <SheetTitle className="sr-only">{COPY.sidebar.title}</SheetTitle>
         <div className="flex items-center justify-end border-b border-[#E4E4E4] px-4 py-2">
           <Button
-            className="h-8 w-8 rounded bg-transparent text-[#666666] hover:bg-[#F8F8F8] hover:text-[#111111]"
+            className="h-8 w-8 min-h-[44px] min-w-[44px] rounded bg-transparent text-[#666666] hover:bg-[#F8F8F8] hover:text-[#111111]"
             onClick={() => onOpenChange(false)}
             size="icon"
             variant="ghost"

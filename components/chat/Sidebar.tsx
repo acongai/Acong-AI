@@ -71,8 +71,8 @@ export function Sidebar({
     <aside className={className} data-slot="sidebar">
       <div className="flex h-full flex-col border-r border-[#E4E4E4] bg-white px-4 pb-4 pt-5">
         <div className="space-y-4">
-          <div className="px-2">
-            <p className="font-[family-name:var(--font-brand)] text-3xl font-extrabold tracking-tight text-[#111111]">
+          <div className="px-2 text-center">
+            <p className="text-5xl tracking-tight text-[#111111]" style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 800 }}>
               {COPY.brandName}
             </p>
           </div>

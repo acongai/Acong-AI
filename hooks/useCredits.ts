@@ -103,6 +103,13 @@ export function useCredits() {
     }
   }, [refreshTick])
 
+  // Refresh credits after a successful top-up (dispatched by PricingPopup)
+  useEffect(() => {
+    const handler = () => setRefreshTick((current) => current + 1)
+    window.addEventListener("acong:credits:topup", handler)
+    return () => window.removeEventListener("acong:credits:topup", handler)
+  }, [])
+
   // Sync credits with auth state: reset on logout, refresh on login
   useEffect(() => {
     const supabase = createClient()

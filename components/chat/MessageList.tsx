@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { AppMessage } from "@/types"
 
@@ -20,6 +21,24 @@ export function MessageList({
   isGenerating = false,
   messages,
 }: MessageListProps) {
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  // Scroll when messages change (new user or assistant message)
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages.length])
+
+  // Scroll when typing indicator appears
+  useEffect(() => {
+    if (isGenerating) {
+      scrollToBottom()
+    }
+  }, [isGenerating])
+
   return (
     <div className="flex-1 overflow-hidden">
       <ScrollArea className="h-full">
@@ -35,6 +54,8 @@ export function MessageList({
           )}
 
           {isGenerating ? <TypingIndicator /> : null}
+
+          <div ref={bottomRef} />
         </div>
       </ScrollArea>
     </div>

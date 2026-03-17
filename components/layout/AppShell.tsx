@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { Sidebar } from "@/components/chat/Sidebar"
 import { MobileDrawer } from "@/components/layout/MobileDrawer"
+import { MobileNav } from "@/components/layout/MobileNav"
 import { PricingPopup } from "@/components/payments/PricingPopup"
 import { useAuth } from "@/hooks/useAuth"
 import { useThread } from "@/hooks/useThread"
@@ -29,6 +30,13 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const auth = useAuth()
+
+  const PLAN_LABELS: Record<string, string> = {
+    free: "Ga Modal",
+    basic: "Miskin",
+    pro: "Ga miskin-miskin amat",
+  }
+  const planName = PLAN_LABELS[auth.currentPlan ?? "free"] ?? "Ga Modal"
 
   const activeThreadId = pathname.startsWith("/chat/")
     ? pathname.split("/").at(-1) ?? null
@@ -118,6 +126,7 @@ export function AppShell({ children }: AppShellProps) {
         className="fixed inset-y-0 left-0 z-30 hidden w-[260px] md:block"
         onDeleteThread={threadState.deleteThread}
         onOpenLogin={() => setLoginOpen(true)}
+        planName={planName}
         threads={threadState.threads}
         userName={auth.user?.email ?? null}
       />
@@ -129,14 +138,22 @@ export function AppShell({ children }: AppShellProps) {
           onDeleteThread={threadState.deleteThread}
           onNavigate={() => setDrawerOpen(false)}
           onOpenLogin={() => setLoginOpen(true)}
+          planName={planName}
           threads={threadState.threads}
           userName={auth.user?.email ?? null}
         />
       </MobileDrawer>
 
-      <div className="h-[calc(100vh-1rem)] overflow-hidden md:pl-[260px]">
+      <div className="h-[calc(100vh-1rem)] overflow-hidden pb-14 md:pb-0 md:pl-[260px]">
         <main className="h-full">{children}</main>
       </div>
+
+      <MobileNav
+        isAuthenticated={Boolean(auth.user)}
+        onOpenAccount={() => setLoginOpen(true)}
+        onOpenDrawer={() => setDrawerOpen(true)}
+        onOpenLogin={() => setLoginOpen(true)}
+      />
 
       <LoginModal
         errorMessage={authError ? COPY.dialogs.oauthError : null}
@@ -145,6 +162,7 @@ export function AppShell({ children }: AppShellProps) {
       />
 
       <PricingPopup
+        isAuthenticated={true}
         isOpen={pricingOpen}
         mode="onboarding"
         onClose={() => setPricingOpen(false)}

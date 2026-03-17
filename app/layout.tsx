@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Barlow, Inter } from "next/font/google";
+import { Barlow } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
 
 const barlow = Barlow({
   variable: "--font-brand",
@@ -31,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${inter.variable} ${barlow.variable} bg-background font-sans text-foreground antialiased`}
+        className={`${barlow.variable} bg-background font-sans text-foreground antialiased`}
       >
         {children}
         <Toaster

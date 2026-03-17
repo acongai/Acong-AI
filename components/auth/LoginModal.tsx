@@ -264,7 +264,7 @@ export function LoginModal({
                   value={password}
                 />
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999999] hover:text-[#111111]"
+                  className="absolute right-0 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center text-[#999999] hover:text-[#111111]"
                   onClick={() => setShowPassword(!showPassword)}
                   type="button"
                 >
