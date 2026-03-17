@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { buildAuthCallbackUrl, getAuthAwareNextPath } from "@/lib/auth/redirect"
 import { COPY } from "@/lib/copy"
 import {
   collectBrowserFingerprint,
@@ -36,6 +35,10 @@ function mapSignupError(message: string) {
     return COPY.dialogs.signupExistsError
   }
 
+  if (message.toLowerCase().includes("8 characters")) {
+    return COPY.dialogs.signupInvalid
+  }
+
   return COPY.dialogs.signupError
 }
 
@@ -53,10 +56,6 @@ async function persistSignupFingerprint() {
   ]
     .filter(Boolean)
     .join("; ")
-}
-
-function getCurrentAuthNextPath() {
-  return getAuthAwareNextPath(new URL(window.location.href))
 }
 
 async function persistSignupFingerprintSafely() {
@@ -79,7 +78,6 @@ export function LoginModal({
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -87,14 +85,12 @@ export function LoginModal({
     setEmail("")
     setPassword("")
     setError(null)
-    setNotice(null)
     setShowPassword(false)
   }
 
   function switchMode(newMode: "login" | "signup") {
     setMode(newMode)
     setError(null)
-    setNotice(null)
   }
 
   function handleOpenChange(value: boolean) {
@@ -107,14 +103,9 @@ export function LoginModal({
 
     startTransition(async () => {
       setError(null)
-      setNotice(null)
       try {
         const supabase = createClient()
         const trimmedEmail = email.trim().toLowerCase()
-        const redirectTo = buildAuthCallbackUrl({
-          next: getCurrentAuthNextPath(),
-          origin: window.location.origin,
-        })
 
         if (mode === "login") {
           const { error: loginError } = await supabase.auth.signInWithPassword({
@@ -135,22 +126,34 @@ export function LoginModal({
 
         await persistSignupFingerprintSafely()
 
-        const { data, error: signupError } = await supabase.auth.signUp({
-          email: trimmedEmail,
-          options: {
-            emailRedirectTo: redirectTo,
+        const signupResponse = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-          password,
+          body: JSON.stringify({
+            email: trimmedEmail,
+            password,
+          }),
         })
+        const signupPayload = (await signupResponse.json().catch(() => null)) as
+          | {
+              error?: string
+            }
+          | null
 
-        if (signupError) {
-          setError(mapSignupError(signupError.message))
+        if (!signupResponse.ok) {
+          setError(signupPayload?.error ?? COPY.dialogs.signupError)
           return
         }
 
-        if (!data.session) {
-          setPassword("")
-          setNotice(COPY.dialogs.signupPendingVerification)
+        const { error: loginError } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password,
+        })
+
+        if (loginError) {
+          setError(COPY.dialogs.signupLoginError)
           return
         }
 
@@ -165,30 +168,6 @@ export function LoginModal({
               : mapSignupError(err.message)
             : COPY.dialogs.genericError,
         )
-      }
-    })
-  }
-
-  const handleGoogle = () => {
-    startTransition(async () => {
-      setError(null)
-      setNotice(null)
-
-      await persistSignupFingerprintSafely()
-
-      const supabase = createClient()
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: buildAuthCallbackUrl({
-            next: getCurrentAuthNextPath(),
-            origin: window.location.origin,
-          }),
-        },
-      })
-
-      if (oauthError) {
-        setError(COPY.dialogs.googleError)
       }
     })
   }
@@ -279,6 +258,7 @@ export function LoginModal({
                   className="h-10 border-[#E4E4E4] pr-10 text-[14px] text-[#111111] placeholder:text-[#999999] focus:border-[#111111] focus-visible:ring-0 outline-none"
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={COPY.dialogs.passwordPlaceholder}
+                  minLength={8}
                   required
                   type={showPassword ? "text" : "password"}
                   value={password}
@@ -295,11 +275,6 @@ export function LoginModal({
               {displayError ? (
                 <p className="text-sm text-[#E5484D]">{displayError}</p>
               ) : null}
-              {notice ? (
-                <p className="rounded border border-[#E4E4E4] bg-[#F8F8F8] px-3 py-2 text-sm text-[#666666]">
-                  {notice}
-                </p>
-              ) : null}
 
               <Button
                 className="h-10 w-full bg-[#111111] text-sm text-white hover:bg-[#222222]"
@@ -310,25 +285,6 @@ export function LoginModal({
                 {mode === "login" ? COPY.dialogs.loginButton : COPY.dialogs.signupButton}
               </Button>
             </form>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-[#E4E4E4]" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-2 text-[#999999]">{COPY.dialogs.orDivider}</span>
-              </div>
-            </div>
-
-            <Button
-              className="h-10 w-full border border-[#E4E4E4] bg-white text-sm text-[#111111] hover:bg-[#F8F8F8]"
-              disabled={isPending}
-              onClick={handleGoogle}
-              type="button"
-              variant="outline"
-            >
-              {COPY.dialogs.googleButton}
-            </Button>
           </div>
 
         </div>

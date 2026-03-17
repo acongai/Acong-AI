@@ -74,6 +74,10 @@ export const COPY = {
       "Daftarnya gagal. Bahkan bikin akun aja masih bisa bikin ribut.",
     signupExistsError:
       "Email itu sudah kepakai. Login aja, jangan pura-pura baru datang.",
+    signupInvalid:
+      "Password minimal 8 karakter. Sedikit usaha lah, jangan terlalu santai.",
+    signupLoginError:
+      "Akun kebentuk, tapi sesi masuknya nyangkut. Coba login sekali lagi, ya meski bikin repot.",
     signupPendingVerification:
       "Akunmu hampir jadi. Cek email buat verifikasi dulu, kalau sistem pengirimnya lagi nggak ngambek.",
     emailPlaceholder: "email lo yang masih aktif, semoga",
