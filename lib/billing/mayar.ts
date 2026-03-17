@@ -124,12 +124,6 @@ export async function createMayarInvoice({
           rate: packageConfig.priceIdr,
         },
       ],
-      extraData: {
-        packageCode: packageConfig.code,
-        paymentId,
-        threadId: threadId ?? null,
-        userId: user.id,
-      },
     }),
   })
 
