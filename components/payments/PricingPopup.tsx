@@ -112,10 +112,11 @@ export function PricingPopup({
     setError(null)
 
     try {
-      const response = await fetch("/api/wallet/topup", {
+      const packageCode = `package_${plan.apiPlan}`
+      const response = await fetch("/api/payments/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credits: plan.credits, plan: plan.apiPlan }),
+        body: JSON.stringify({ packageCode }),
       })
 
       if (!response.ok) {
@@ -123,10 +124,8 @@ export function PricingPopup({
         throw new Error(payload.error ?? "Top-up gagal")
       }
 
-      setCurrentPlan(plan.id)
-      window.dispatchEvent(new CustomEvent("acong:credits:topup"))
-      onPlanSelected?.()
-      onClose()
+      const payload = (await response.json()) as { checkoutUrl: string }
+      window.location.href = payload.checkoutUrl
     } catch (err) {
       setError(err instanceof Error ? err.message : "Top-up gagal, coba lagi")
     } finally {
