@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server"
 
+import { sanitizeAuthNextPath } from "@/lib/auth/redirect"
 import { createClient } from "@/supabase/server"
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get("code")
-  const next = requestUrl.searchParams.get("next") ?? "/"
+  const next = sanitizeAuthNextPath(requestUrl.searchParams.get("next"))
 
   if (code) {
     const supabase = await createClient()
@@ -16,7 +17,9 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(
-    new URL("/login?error=magic_link_failed", requestUrl.origin),
-  )
+  const failureUrl = new URL(next, requestUrl.origin)
+  failureUrl.searchParams.set("auth_error", "callback_failed")
+  failureUrl.searchParams.set("login", "1")
+
+  return NextResponse.redirect(failureUrl)
 }

@@ -1,21 +1,14 @@
 "use client"
 
-import Link from "next/link"
-import { useRef, useState } from "react"
-import { toast } from "sonner"
+import { useEffect, useEffectEvent, useState } from "react"
+import { motion } from "framer-motion"
 
 import { useThread } from "@/hooks/useThread"
 import { PaywallModal } from "@/components/payments/PaywallModal"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { COPY } from "@/lib/copy"
-import type { AppAttachment } from "@/types"
 
 import { Composer } from "./Composer"
+import { EmptyStateMascot } from "./EmptyStateMascot"
 import { MessageList } from "./MessageList"
 
 interface ChatShellProps {
@@ -24,197 +17,145 @@ interface ChatShellProps {
 
 export function ChatShell({ threadId }: ChatShellProps) {
   const [draft, setDraft] = useState("")
-  const [uploadedAttachments, setUploadedAttachments] = useState<AppAttachment[]>(
-    [],
-  )
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const thread = useThread({
     includeMessages: true,
     threadId,
   })
+  const closeLoginPrompt = thread.closeLoginPrompt
+  const closePaymentPrompt = thread.closePaymentPrompt
+  const error = thread.error
+  const isLoading = thread.isLoading
+  const isSending = thread.isSending
+  const loginPromptOpen = thread.loginPromptOpen
+  const messages = thread.messages
+  const paymentPrompt = thread.paymentPrompt
+  const refresh = thread.refresh
+  const regenerateLastReply = thread.regenerateLastReply
+  const sendMessage = thread.sendMessage
+
+  const hasMessages = messages.length > 0
+  const handleLoginClosed = useEffectEvent(() => {
+    void refresh()
+    setDraft("")
+  })
+
+  // When the hook signals login is required (401), open AppShell's modal
+  useEffect(() => {
+    if (loginPromptOpen) {
+      window.dispatchEvent(new CustomEvent("acong:login:open"))
+      closeLoginPrompt()
+    }
+  }, [closeLoginPrompt, loginPromptOpen])
+
+  // When AppShell's modal closes without login, clean up pending state
+  useEffect(() => {
+    const handler = () => handleLoginClosed()
+    window.addEventListener("acong:login:closed", handler)
+    return () => window.removeEventListener("acong:login:closed", handler)
+  }, [])
 
   async function handleSubmit(value: string) {
-    const result = await thread.sendMessage(
-      value,
-      uploadedAttachments.map((attachment) => attachment.id),
-    )
+    const result = await sendMessage(value)
 
     if (result !== "login_required") {
       setDraft("")
-      setUploadedAttachments([])
-      setUploadProgress(null)
+    }
+
+    if (result === "sent") {
+      window.dispatchEvent(new CustomEvent("acong:credit:deducted"))
     }
   }
 
   async function handleRegenerate() {
-    await thread.regenerateLastReply()
-  }
-
-  function triggerFilePicker() {
-    fileInputRef.current?.click()
-  }
-
-  async function uploadFile(file: File) {
-    return new Promise<void>((resolve, reject) => {
-      const request = new XMLHttpRequest()
-      const formData = new FormData()
-
-      formData.append("file", file)
-
-      if (threadId) {
-        formData.append("threadId", threadId)
-      }
-
-      request.open("POST", "/api/upload")
-      request.responseType = "json"
-      request.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          setUploadProgress((event.loaded / event.total) * 100)
-        }
-      }
-
-      request.onload = () => {
-        const payload = request.response as
-          | {
-              attachment?: {
-                fileName?: string
-                id: string
-                mimeType?: string
-                url: string
-              }
-              error?: string
-            }
-          | null
-        const uploadedAttachment = payload?.attachment
-
-        if (request.status >= 200 && request.status < 300 && uploadedAttachment) {
-          setUploadedAttachments((current) => [
-            ...current,
-            {
-              ...uploadedAttachment,
-              fileType: "image",
-            },
-          ])
-          setUploadProgress(null)
-          resolve()
-          return
-        }
-
-        const error = payload?.error ?? COPY.upload.genericError
-        setUploadProgress(null)
-        reject(new Error(error))
-      }
-
-      request.onerror = () => {
-        setUploadProgress(null)
-        reject(new Error(COPY.upload.networkError))
-      }
-
-      request.send(formData)
-    })
-  }
-
-  async function handleFileSelection(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file = event.target.files?.[0]
-
-    if (!file) {
-      return
-    }
-
-    try {
-      await uploadFile(file)
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : COPY.upload.genericError,
-      )
-    } finally {
-      event.target.value = ""
-    }
+    await regenerateLastReply()
   }
 
   return (
-    <section className="flex min-h-[calc(100vh-3.5rem)] flex-col bg-[#F2F2F2]">
-      <input
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        className="hidden"
-        onChange={handleFileSelection}
-        ref={fileInputRef}
-        type="file"
-      />
+    <>
+      <div
+        className="bg-[#F2F2F2]"
+        style={{ backgroundImage: "radial-gradient(circle, #00000026 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+      >
+      {hasMessages ? (
+        <section className="flex min-h-[calc(100vh-3.5rem)] flex-col">
+          {error ? (
+            <div className="px-4 pt-4 sm:px-6 lg:px-8">
+              <div className="mx-auto max-w-4xl">
+                <p className="rounded border border-[#E5484D]/20 bg-[#E5484D]/10 px-3 py-2 text-xs text-[#E5484D]">
+                  {error}
+                </p>
+              </div>
+            </div>
+          ) : null}
 
-      {(thread.isPreviewMode || thread.error) ? (
-        <div className="px-4 pt-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-4xl space-y-2">
-            {thread.isPreviewMode ? (
-              <p className="rounded border border-[#F0D080] bg-[#FFF8E1] px-3 py-2 text-xs text-[#7A5C00]">
-                {COPY.preview.notice}
-              </p>
-            ) : null}
-            {thread.error ? (
+          <MessageList
+            emptySubtitle={COPY.emptyStateSubtitle}
+            emptyTitle={COPY.emptyStateTitle}
+            isGenerating={isSending}
+            messages={messages}
+          />
+
+          <Composer
+            disabled={isLoading}
+            isSubmitting={isSending}
+            onRegenerate={handleRegenerate}
+            onSubmit={handleSubmit}
+            onValueChange={setDraft}
+            regenerateDisabled={messages.length === 0 || !threadId}
+            value={draft}
+          />
+        </section>
+      ) : (
+        <section
+          className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-4"
+        >
+          {error ? (
+            <div className="mb-6 w-full max-w-2xl">
               <p className="rounded border border-[#E5484D]/20 bg-[#E5484D]/10 px-3 py-2 text-xs text-[#E5484D]">
-                {thread.error}
+                {error}
               </p>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+            </div>
+          ) : null}
 
-      <MessageList
-        emptySubtitle={COPY.emptyStateSubtitle}
-        emptyTitle={COPY.emptyStateTitle}
-        isGenerating={thread.isSending}
-        messages={thread.messages}
-      />
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-10"
+            initial={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.25 }}
+          >
+            <EmptyStateMascot />
+          </motion.div>
 
-      <Composer
-        attachments={uploadedAttachments}
-        canUpload={!thread.isPreviewMode}
-        disabled={thread.isLoading}
-        isSubmitting={thread.isSending}
-        onPickAttachment={triggerFilePicker}
-        onRegenerate={handleRegenerate}
-        onSubmit={handleSubmit}
-        onValueChange={setDraft}
-        regenerateDisabled={
-          thread.messages.length === 0 || (!thread.isPreviewMode && !threadId)
-        }
-        uploadProgress={uploadProgress}
-        value={draft}
-      />
-
-      <Dialog onOpenChange={thread.closeLoginPrompt} open={thread.loginPromptOpen}>
-        <DialogContent className="border-[#E4E4E4] bg-white text-[#111111] sm:max-w-md">
-          <DialogTitle className="text-xl font-semibold text-[#111111]">
-            {COPY.dialogs.loginTitle}
-          </DialogTitle>
-          <DialogDescription className="text-sm leading-6 text-[#666666]">
-            {COPY.dialogs.loginSubtitle}
-          </DialogDescription>
-          <div className="mt-4 flex justify-end">
-            <Link
-              className="inline-flex h-10 items-center justify-center rounded bg-[#111111] px-5 text-sm font-medium text-white transition-colors hover:bg-[#222222]"
-              href="/login"
-            >
-              {COPY.dialogs.loginButton}
-            </Link>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-2xl"
+            initial={{ opacity: 0, y: 12 }}
+            transition={{ delay: 0.12, duration: 0.25 }}
+          >
+            <Composer
+              disabled={isLoading}
+              isSubmitting={isSending}
+              onRegenerate={handleRegenerate}
+              onSubmit={handleSubmit}
+              onValueChange={setDraft}
+              regenerateDisabled={true}
+              value={draft}
+              variant="centered"
+            />
+          </motion.div>
+        </section>
+      )}
+      </div>
 
       <PaywallModal
         onOpenChange={(open) => {
           if (!open) {
-            thread.closePaymentPrompt()
+            closePaymentPrompt()
           }
         }}
-        open={Boolean(thread.paymentPrompt)}
-        threadId={thread.paymentPrompt?.threadId ?? threadId}
+        open={Boolean(paymentPrompt)}
+        threadId={paymentPrompt?.threadId ?? threadId}
       />
-    </section>
+    </>
   )
 }

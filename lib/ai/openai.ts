@@ -1,4 +1,5 @@
 import OpenAI from "openai"
+import type { EasyInputMessage } from "openai/resources/responses/responses"
 
 interface OpenAIConversationMessage {
   content: string
@@ -25,18 +26,15 @@ export async function generateTextResponse({
   systemPrompt,
 }: GenerateTextParams) {
   const client = getOpenAIClient()
+  const input: EasyInputMessage[] = conversation.map((message) => ({
+    content: message.content,
+    role: message.role,
+    type: "message",
+  }))
   const response = await client.responses.create({
     model: "gpt-4o-mini",
     instructions: systemPrompt,
-    input: conversation.map((message) => ({
-      role: message.role,
-      content: [
-        {
-          type: "input_text",
-          text: message.content,
-        },
-      ],
-    })),
+    input,
     max_output_tokens: 400,
     temperature: 0.9,
   })

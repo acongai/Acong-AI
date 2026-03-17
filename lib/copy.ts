@@ -1,9 +1,9 @@
 export const COPY = {
-  brandName: "Acong",
+  brandName: "ACONG",
   loginTitle: "Login dulu. Iya, aku kasih 5 kredit gratis. Santai, aku juga nyesel.",
   loginSubtitle:
-    "Masuk pakai magic link email. Login pertama dapat 5 kredit gratis dari server. Bukan karena kamu spesial.",
-  loginCTA: "Kirim magic link",
+    "Masuk pakai email dan password. Login pertama dapat 5 kredit gratis. Bukan karena kamu spesial.",
+  loginCTA: "Masuk",
   paywallTitle: "Kredit habis. Ya beli lagi, masa aku kerja pakai harapan.",
   paywallSubtitle:
     "Pesanmu sudah nyangkut di thread, tapi jawabannya ditahan sampai kamu isi kredit lagi. Pelit sih boleh, efektif enggak.",
@@ -34,20 +34,19 @@ export const COPY = {
   sidebar: {
     title: "AI yang jawab iya, tapi sambil kesel.",
     subtitle: "Chat aja. Dia bakal bantu, walau jelas berat hati.",
-    newThread: "Buka thread baru",
+    loginButton: "login dulu kali",
+    newThread: "Chat baru",
     emptyThreads:
-      "Belum ada thread. Kosong banget, kayak usaha kamu konsisten.",
+      "Nol thread. Nol chat. Nol niat. Acong udah siap dari tadi, kamunya aja yang entah ke mana.",
     footer: "Kalau jawaban dia ngeselin, itu memang fitur. Tragis, ya.",
   },
   loginPage: {
-    magicLinkFailed:
-      "Magic link-nya gagal kepasang. Coba lagi, ya meski capek juga lihat kamu.",
-    magicLinkSent:
-      "Magic link udah dikirim. Buka email kamu dan klik, kalau kamu masih ingat cara buka inbox.",
     genericError: "Login-nya gagal. Entah server kesel, entah kamu.",
     kicker: "Acong Access",
     emailPlaceholder: "email kamu yang masih aktif",
-    submitting: "Lagi ngirim link, sabar dikit.",
+    passwordPlaceholder: "password, semoga bukan 123456",
+    submitting: "Lagi masuk, sabar dikit.",
+    signupSuccess: "Akun dibuat. Sekarang kamu resmi ada. Entah itu kabar baik atau enggak.",
   },
   thread: {
     activeLabel: "Thread aktif",
@@ -57,10 +56,32 @@ export const COPY = {
     untitledThread: "Thread tanpa judul",
   },
   dialogs: {
-    loginTitle: "Login dulu. Iya, ada 5 kredit gratis. Jangan besar kepala.",
+    loginTitle: "lo mau ngomong apa sih, login dulu",
     loginSubtitle:
-      "Kamu belum login, jadi pesanmu bahkan gak aku proses. Masuk dulu, terus ambil 5 kredit gratis itu sebelum aku berubah pikiran.",
-    loginButton: "Ke halaman login",
+      "acong ga bakal proses omongan orang yang bahkan ga mau kenalan dulu. masuk, ambil 5 kredit gratis, baru ribut.",
+    loginButton: "Masuk sekarang",
+    loginError: "Email atau password salah. Coba lagi, kalau masih ingat.",
+    genericError: "Login-nya ngaco. Coba lagi, jangan bikin sistem ikut malu.",
+    googleError:
+      "Login Google-nya gagal. Biasanya karena konfigurasinya belum kelar atau semesta lagi rese.",
+    oauthError:
+      "Balik dari auth tapi sesinya nggak jadi kepasang. Coba lagi, jangan panik sok elegan.",
+    signupTitle: "lo mau ngomong apa sih, login dulu",
+    signupSubtitle:
+      "acong ga bakal proses omongan orang yang bahkan ga mau kenalan dulu. masuk, ambil 5 kredit gratis, baru ribut.",
+    signupButton: "Bikin akun dulu",
+    signupError:
+      "Daftarnya gagal. Bahkan bikin akun aja masih bisa bikin ribut.",
+    signupExistsError:
+      "Email itu sudah kepakai. Login aja, jangan pura-pura baru datang.",
+    signupPendingVerification:
+      "Akunmu hampir jadi. Cek email buat verifikasi dulu, kalau sistem pengirimnya lagi nggak ngambek.",
+    emailPlaceholder: "email lo yang masih aktif, semoga",
+    passwordPlaceholder: "password, jangan 123456 please",
+    loginTabLabel: "Udah punya akun",
+    signupTabLabel: "Belum ada akun",
+    googleButton: "Males isi form, lanjut Google",
+    orDivider: "atau capek sendiri",
   },
   composer: {
     placeholder:
