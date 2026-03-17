@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,13 +10,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { COPY } from "@/lib/copy"
-import {
-  collectBrowserFingerprint,
-  serializeFingerprintCookie,
-  SIGNUP_FINGERPRINT_COOKIE,
-} from "@/lib/utils/fingerprint"
 import { createClient } from "@/supabase/client"
 
 interface LoginModalProps {
@@ -26,150 +19,40 @@ interface LoginModalProps {
   open: boolean
 }
 
-function mapLoginError() {
-  return COPY.dialogs.loginError
-}
-
-function mapSignupError(message: string) {
-  if (message.toLowerCase().includes("already registered")) {
-    return COPY.dialogs.signupExistsError
-  }
-
-  if (message.toLowerCase().includes("8 characters")) {
-    return COPY.dialogs.signupInvalid
-  }
-
-  return COPY.dialogs.signupError
-}
-
-async function persistSignupFingerprint() {
-  const payload = await collectBrowserFingerprint()
-  const cookieValue = serializeFingerprintCookie(payload)
-  const secure = window.location.protocol === "https:" ? "; Secure" : ""
-
-  document.cookie = [
-    `${SIGNUP_FINGERPRINT_COOKIE}=${cookieValue}`,
-    "Path=/",
-    "Max-Age=600",
-    "SameSite=Lax",
-    secure,
-  ]
-    .filter(Boolean)
-    .join("; ")
-}
-
-async function persistSignupFingerprintSafely() {
-  try {
-    await persistSignupFingerprint()
-  } catch (error) {
-    console.warn("auth_fingerprint_capture_failed", {
-      error,
-    })
-  }
-}
-
 export function LoginModal({
   errorMessage,
   onOpenChange,
   open,
 }: LoginModalProps) {
-  const [mode, setMode] = useState<"login" | "signup">("login")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
-  const router = useRouter()
-
-  function reset() {
-    setEmail("")
-    setPassword("")
-    setError(null)
-    setShowPassword(false)
-  }
-
-  function switchMode(newMode: "login" | "signup") {
-    setMode(newMode)
-    setError(null)
-  }
 
   function handleOpenChange(value: boolean) {
-    if (!value) reset()
+    if (!value) setError(null)
     onOpenChange(value)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  async function handleGoogleLogin() {
+    setLoading(true)
+    setError(null)
 
-    startTransition(async () => {
-      setError(null)
-      try {
-        const supabase = createClient()
-        const trimmedEmail = email.trim().toLowerCase()
+    try {
+      const supabase = createClient()
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
 
-        if (mode === "login") {
-          const { error: loginError } = await supabase.auth.signInWithPassword({
-            email: trimmedEmail,
-            password,
-          })
-
-          if (loginError) {
-            setError(mapLoginError())
-            return
-          }
-
-          reset()
-          onOpenChange(false)
-          router.refresh()
-          return
-        }
-
-        await persistSignupFingerprintSafely()
-
-        const signupResponse = await fetch("/api/auth/signup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: trimmedEmail,
-            password,
-          }),
-        })
-        const signupPayload = (await signupResponse.json().catch(() => null)) as
-          | {
-              error?: string
-            }
-          | null
-
-        if (!signupResponse.ok) {
-          setError(signupPayload?.error ?? COPY.dialogs.signupError)
-          return
-        }
-
-        const { error: loginError } = await supabase.auth.signInWithPassword({
-          email: trimmedEmail,
-          password,
-        })
-
-        if (loginError) {
-          setError(COPY.dialogs.signupLoginError)
-          return
-        }
-
-        reset()
-        onOpenChange(false)
-        router.refresh()
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? mode === "login"
-              ? mapLoginError()
-              : mapSignupError(err.message)
-            : COPY.dialogs.genericError,
-        )
+      if (oauthError) {
+        setError(COPY.dialogs.googleError)
+        setLoading(false)
       }
-    })
+    } catch {
+      setError(COPY.dialogs.googleError)
+      setLoading(false)
+    }
   }
 
   const displayError = error ?? (open ? errorMessage : null)
@@ -195,96 +78,41 @@ export function LoginModal({
 
             <div className="space-y-2">
               <DialogTitle className="text-lg font-semibold leading-snug text-[#111111]">
-                {mode === "login" ? COPY.dialogs.loginTitle : COPY.dialogs.signupTitle}
+                {COPY.dialogs.loginTitle}
               </DialogTitle>
               <DialogDescription className="text-xs leading-5 text-[#666666]">
-                {mode === "login" ? COPY.dialogs.loginSubtitle : COPY.dialogs.signupSubtitle}
+                {COPY.dialogs.loginSubtitle}
               </DialogDescription>
             </div>
           </div>
 
-          {/* Right column — form */}
-          <div className="w-full space-y-4 rounded-2xl bg-white p-8 md:w-3/5 md:rounded-l-none md:rounded-r-2xl">
+          {/* Right column — Google login */}
+          <div className="flex w-full flex-col items-center justify-center gap-5 rounded-2xl bg-white p-8 md:w-3/5 md:rounded-l-none md:rounded-r-2xl">
 
             {/* Title visible on mobile only */}
-            <div className="md:hidden">
+            <div className="w-full md:hidden">
               <DialogTitle className="text-lg font-semibold text-[#111111]">
-                {mode === "login" ? COPY.dialogs.loginTitle : COPY.dialogs.signupTitle}
+                {COPY.dialogs.loginTitle}
               </DialogTitle>
               <DialogDescription className="mt-1 text-xs leading-5 text-[#666666]">
-                {mode === "login" ? COPY.dialogs.loginSubtitle : COPY.dialogs.signupSubtitle}
+                {COPY.dialogs.loginSubtitle}
               </DialogDescription>
             </div>
 
-            <div className="flex rounded border border-[#E4E4E4] p-0.5">
-              <button
-                className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-                  mode === "login"
-                    ? "bg-[#111111] text-white"
-                    : "text-[#666666] hover:text-[#111111]"
-                }`}
-                onClick={() => switchMode("login")}
-                type="button"
-              >
-                {COPY.dialogs.loginTabLabel}
-              </button>
-              <button
-                className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-                  mode === "signup"
-                    ? "bg-[#111111] text-white"
-                    : "text-[#666666] hover:text-[#111111]"
-                }`}
-                onClick={() => switchMode("signup")}
-                type="button"
-              >
-                {COPY.dialogs.signupTabLabel}
-              </button>
-            </div>
+            {displayError ? (
+              <p className="w-full text-sm text-[#E5484D]">{displayError}</p>
+            ) : null}
 
-            <form className="space-y-3" onSubmit={handleSubmit}>
-              <Input
-                autoComplete="email"
-                className="h-10 border-[#E4E4E4] text-[14px] text-[#111111] placeholder:text-[#999999] focus:border-[#111111] focus-visible:ring-0 outline-none"
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={COPY.dialogs.emailPlaceholder}
-                required
-                type="email"
-                value={email}
-              />
+            <Button
+              className="h-10 w-full bg-[#111111] text-sm text-white hover:bg-[#222222]"
+              disabled={loading}
+              onClick={handleGoogleLogin}
+              type="button"
+            >
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {COPY.dialogs.googleButton}
+            </Button>
 
-              <div className="relative">
-                <Input
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  className="h-10 border-[#E4E4E4] pr-10 text-[14px] text-[#111111] placeholder:text-[#999999] focus:border-[#111111] focus-visible:ring-0 outline-none"
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={COPY.dialogs.passwordPlaceholder}
-                  minLength={8}
-                  required
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                />
-                <button
-                  className="absolute right-0 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center text-[#999999] hover:text-[#111111]"
-                  onClick={() => setShowPassword(!showPassword)}
-                  type="button"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-
-              {displayError ? (
-                <p className="text-sm text-[#E5484D]">{displayError}</p>
-              ) : null}
-
-              <Button
-                className="h-10 w-full bg-[#111111] text-sm text-white hover:bg-[#222222]"
-                disabled={isPending}
-                type="submit"
-              >
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {mode === "login" ? COPY.dialogs.loginButton : COPY.dialogs.signupButton}
-              </Button>
-            </form>
           </div>
 
         </div>
