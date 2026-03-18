@@ -117,7 +117,7 @@ export function Composer({
           />
 
           <button
-            className="flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white text-[#111111] shadow-sm transition-colors duration-150 hover:bg-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center text-[#111111] transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 md:rounded-full md:bg-white md:shadow-sm md:hover:bg-[#f0f0f0]"
             disabled={!canSend}
             onClick={() => void handleSubmit(value)}
             title={COPY.composer.sendLabel}
