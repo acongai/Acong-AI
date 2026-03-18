@@ -150,9 +150,10 @@ export function AppShell({ children }: AppShellProps) {
 
       <MobileNav
         isAuthenticated={Boolean(auth.user)}
-        onOpenAccount={() => setLoginOpen(true)}
+        onOpenAccount={() => {}}
         onOpenDrawer={() => setDrawerOpen(true)}
         onOpenLogin={() => setLoginOpen(true)}
+        userEmail={auth.user?.email ?? null}
       />
 
       <LoginModal

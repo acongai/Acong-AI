@@ -87,7 +87,7 @@ export function Sidebar({
           </button>
         </div>
 
-        <ScrollArea className="mt-6 flex-1 pr-1">
+        <ScrollArea className="mt-6 min-h-0 flex-1 overflow-x-hidden pr-1">
           <ThreadList
             activeThreadId={activeThreadId}
             onDeleteThread={onDeleteThread}
