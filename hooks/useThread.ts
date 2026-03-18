@@ -480,7 +480,7 @@ export function useThread({
       }
 
       if (!response.ok) {
-        const message = payload.error ?? COPY.errorMessage
+        const message = payload.error ?? COPY.api.sendFailed
 
         setError(message)
         toast.error(message)
@@ -494,7 +494,7 @@ export function useThread({
       const message =
         regenerateError instanceof Error
           ? regenerateError.message
-          : COPY.errorMessage
+          : COPY.api.sendFailed
 
       setError(message)
       toast.error(message)

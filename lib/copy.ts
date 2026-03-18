@@ -18,8 +18,7 @@ export const COPY = {
     "Lagi diketik. Iya, hidupnya berat sekali.",
     "Jawaban lagi dimasak. Jangan maksa, nanti gosong.",
   ],
-  errorMessage:
-    "Jawabannya gagal jadi. Iya, salahin aja kosmos. Coba lagi nanti.",
+  errorMessage: "error. bukan salah gw. coba lagi.",
   regenerateLabel: "Jawab ulang, kalau harus banget",
   paymentSuccessTitle: "Kamu beneran bayar. Mengejutkan sekali.",
   paymentSuccessSubtitle:
@@ -194,7 +193,7 @@ export const COPY = {
       "Kredit kamu habis. Hebat. Sekarang bayar dulu kalau mau lanjut.",
     sendDebitFailed:
       "Potong kreditnya gagal. Bahkan dompet virtual pun ragu sama kamu.",
-    sendFailed: "Pesannya gagal dikirim. Iya, sistem juga bisa bete.",
+    sendFailed: "gagal nyambung. kredit lo udah dibalikin.",
     regenerateRateLimit:
       "Regenerate juga ada batasnya. Tenang dikit bisa, kan.",
     regenerateUnauthorized:
