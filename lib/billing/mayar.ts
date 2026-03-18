@@ -348,7 +348,7 @@ export async function processAwaitingPaymentMessage(userId: string) {
       content: orchestration.outputText,
       messageId: pendingAssistantMessage.id,
       metadata: {
-        openai_request_id: orchestration.meta.requestId,
+        ai_request_id: orchestration.meta.requestId,
         resumed_from_payment: true,
         roast_applied: orchestration.meta.roastApplied,
         typo_score: orchestration.meta.typoScore,

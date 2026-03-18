@@ -46,7 +46,7 @@ export async function generateTextResponse({
       parts: [{ text: systemPrompt }],
     },
     generationConfig: {
-      maxOutputTokens: 400,
+      maxOutputTokens: 300,
       temperature: 0.9,
     },
     safetySettings: SAFETY_SETTINGS,

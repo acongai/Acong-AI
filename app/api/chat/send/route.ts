@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
       content: orchestration.outputText,
       messageId: assistantPlaceholder.id,
       metadata: {
-        openai_request_id: orchestration.meta.requestId,
+        ai_request_id: orchestration.meta.requestId,
         roast_applied: orchestration.meta.roastApplied,
         typo_score: orchestration.meta.typoScore,
       },
