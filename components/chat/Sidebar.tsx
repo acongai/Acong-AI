@@ -5,6 +5,7 @@ import { LogOut, MessageSquarePlus, User } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { ThreadList } from "@/components/chat/ThreadList"
+import { GradientButton } from "@/components/ui/gradient-button"
 import { COPY } from "@/lib/copy"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { createClient } from "@/supabase/client"
@@ -77,14 +78,14 @@ export function Sidebar({
             </p>
           </div>
 
-          <button
-            className="inline-flex h-9 w-full cursor-pointer items-center justify-center rounded border border-transparent bg-[#111111] px-4 text-sm font-medium text-white transition-colors hover:bg-[#222222]"
+          <GradientButton
+            className="h-9 w-full min-w-0 rounded-lg px-4 py-0 text-sm font-medium"
             onClick={handleNewThread}
             type="button"
           >
             <MessageSquarePlus className="mr-2 h-4 w-4" />
             {COPY.sidebar.newThread}
-          </button>
+          </GradientButton>
         </div>
 
         <ScrollArea className="mt-6 min-h-0 flex-1 overflow-x-hidden pr-1">
