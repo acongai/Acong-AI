@@ -1,5 +1,5 @@
 import { ACONG_SYSTEM_PROMPT } from "@/lib/ai/persona"
-import { generateTextResponse } from "@/lib/ai/openai"
+import { generateTextResponse } from "@/lib/ai/gemini"
 import {
   computeTypoScore,
   getTypoRoastInstruction,
