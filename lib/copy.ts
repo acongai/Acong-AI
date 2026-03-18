@@ -83,7 +83,7 @@ export const COPY = {
     passwordPlaceholder: "password, jangan 123456 please",
     loginTabLabel: "Udah punya akun",
     signupTabLabel: "Belum ada akun",
-    googleButton: "Males isi form, lanjut Google",
+    googleButton: "Mager daftar? pake Google aeh",
     orDivider: "atau capek sendiri",
   },
   composer: {
