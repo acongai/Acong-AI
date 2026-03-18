@@ -224,5 +224,12 @@ export const COPY = {
   },
   payments: {
     checkoutLoading: "Lagi bikin checkout...",
+    verifyButton: "Udah bayar tapi kredit belum masuk?",
+    verifyLoading: "Lagi ngecek ke Mayar...",
+    verifySuccess: "Kredit udah masuk! Sekarang bisa ngobrol lagi.",
+    verifyAlreadyCredited: "Kredit udah masuk sebelumnya. Tutup modal ini.",
+    verifyNotPaid: "Mayar bilang belum lunas. Cek lagi nanti atau hubungi support.",
+    verifyNoPending: "Tidak ada pembayaran pending yang perlu dicek.",
+    verifyError: "Gagal ngecek status. Coba lagi.",
   },
 } as const

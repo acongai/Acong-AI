@@ -44,6 +44,7 @@ export function PaywallModal({
   threadId,
 }: PaywallModalProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
   const [selectedPackage, setSelectedPackage] =
     useState<CreditPackageCode>("package_basic")
 
@@ -79,6 +80,38 @@ export function PaywallModal({
           : COPY.api.paymentCreateFailed,
       )
       setIsLoading(false)
+    }
+  }
+
+  async function handleVerify() {
+    setIsVerifying(true)
+
+    try {
+      const response = await fetch("/api/payments/verify", { method: "POST" })
+      const payload = (await response.json()) as { status?: string; error?: string }
+
+      if (!response.ok) {
+        toast.error(COPY.payments.verifyError)
+        return
+      }
+
+      if (payload.status === "credited") {
+        toast.success(COPY.payments.verifySuccess)
+        window.dispatchEvent(new CustomEvent("acong:credits:topup"))
+        onOpenChange(false)
+      } else if (payload.status === "already_credited") {
+        toast.success(COPY.payments.verifyAlreadyCredited)
+        window.dispatchEvent(new CustomEvent("acong:credits:topup"))
+        onOpenChange(false)
+      } else if (payload.status === "not_paid") {
+        toast.error(COPY.payments.verifyNotPaid)
+      } else {
+        toast.error(COPY.payments.verifyNoPending)
+      }
+    } catch {
+      toast.error(COPY.payments.verifyError)
+    } finally {
+      setIsVerifying(false)
     }
   }
 
@@ -122,6 +155,17 @@ export function PaywallModal({
           >
             {isLoading ? COPY.payments.checkoutLoading : COPY.paywallCTA}
           </Button>
+        </div>
+
+        <div className="mt-2 flex justify-center">
+          <button
+            className="text-xs text-[#666666] underline-offset-2 hover:text-[#111111] hover:underline disabled:opacity-50"
+            disabled={isVerifying}
+            onClick={() => void handleVerify()}
+            type="button"
+          >
+            {isVerifying ? COPY.payments.verifyLoading : COPY.payments.verifyButton}
+          </button>
         </div>
       </DialogContent>
     </Dialog>
