@@ -55,6 +55,7 @@ export interface Database {
           signup_user_agent: string | null
           status: string | null
           current_plan: string | null
+          has_consented: boolean | null
         }
         Insert: {
           id: string
@@ -68,6 +69,7 @@ export interface Database {
           signup_user_agent?: string | null
           status?: string | null
           current_plan?: string | null
+          has_consented?: boolean | null
         }
         Update: {
           id?: string
@@ -81,6 +83,7 @@ export interface Database {
           signup_user_agent?: string | null
           status?: string | null
           current_plan?: string | null
+          has_consented?: boolean | null
         }
         Relationships: []
       }
