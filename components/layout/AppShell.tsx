@@ -12,9 +12,15 @@ import { PricingPopup } from "@/components/payments/PricingPopup"
 import { useAuth } from "@/hooks/useAuth"
 import { useThread } from "@/hooks/useThread"
 import { COPY } from "@/lib/copy"
+import { createClient } from "@/supabase/client"
 
 const LoginModal = dynamic(
   () => import("@/components/auth/LoginModal").then((m) => m.LoginModal),
+  { ssr: false },
+)
+
+const ConsentModal = dynamic(
+  () => import("@/components/auth/ConsentModal").then((m) => m.ConsentModal),
   { ssr: false },
 )
 
@@ -26,6 +32,8 @@ export function AppShell({ children }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const [pricingOpen, setPricingOpen] = useState(false)
+  const [consentOpen, setConsentOpen] = useState(false)
+  const [consentUserId, setConsentUserId] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -56,6 +64,40 @@ export function AppShell({ children }: AppShellProps) {
     setLoginOpen(true)
   })
 
+  function showPricingIfNeeded() {
+    if (!sessionStorage.getItem("pricing_shown")) {
+      sessionStorage.setItem("pricing_shown", "1")
+      setPricingOpen(true)
+    }
+  }
+
+  async function checkConsent(userId: string) {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from("profiles")
+      .select("has_consented")
+      .eq("id", userId)
+      .single()
+
+    if (!data?.has_consented) {
+      setConsentUserId(userId)
+      setConsentOpen(true)
+    } else {
+      showPricingIfNeeded()
+    }
+  }
+
+  function handleConsented() {
+    setConsentOpen(false)
+    setConsentUserId(null)
+    showPricingIfNeeded()
+  }
+
+  function handleDeclined() {
+    setConsentOpen(false)
+    setConsentUserId(null)
+  }
+
   // Listen for ChatShell to request the login popup (e.g. on 401)
   useEffect(() => {
     const handler = () => openLogin()
@@ -81,12 +123,9 @@ export function AppShell({ children }: AppShellProps) {
     }
 
     if (previousAuthUserIdRef.current !== currentUserId) {
-      // User just logged in (was null, now has id) — show pricing popup once per session
+      // User just logged in (was null, now has id) — check consent first
       if (!previousAuthUserIdRef.current && currentUserId) {
-        if (!sessionStorage.getItem("pricing_shown")) {
-          sessionStorage.setItem("pricing_shown", "1")
-          setPricingOpen(true)
-        }
+        void checkConsent(currentUserId)
       }
 
       previousAuthUserIdRef.current = currentUserId
@@ -155,6 +194,15 @@ export function AppShell({ children }: AppShellProps) {
         onOpenLogin={() => setLoginOpen(true)}
         userEmail={auth.user?.email ?? null}
       />
+
+      {consentUserId ? (
+        <ConsentModal
+          onConsented={handleConsented}
+          onDeclined={handleDeclined}
+          open={consentOpen}
+          userId={consentUserId}
+        />
+      ) : null}
 
       <LoginModal
         errorMessage={authError ? COPY.dialogs.oauthError : null}

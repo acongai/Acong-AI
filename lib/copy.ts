@@ -54,6 +54,12 @@ export const COPY = {
     emptyPreview: "Masih kosong. Menyedihkan.",
     untitledThread: "Thread tanpa judul",
   },
+  consent: {
+    title: "lo yakin?",
+    body: "apapun yang terjadi setelah ini, itu bukan salah gw.",
+    confirm: "yakin",
+    decline: "ngga jadi",
+  },
   dialogs: {
     loginTitle: "lo mau ngomong apa sih, login dulu",
     loginSubtitle:
