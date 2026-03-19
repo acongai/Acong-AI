@@ -116,6 +116,7 @@ export function AppShell({ children }: AppShellProps) {
       previousAuthUserIdRef.current = currentUserId
 
       if (currentUserId) {
+        void checkConsent(currentUserId)
         refreshThreads()
       }
 
