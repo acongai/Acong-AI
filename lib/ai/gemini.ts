@@ -53,7 +53,9 @@ export async function generateTextResponse({
     },
     generationConfig: {
       maxOutputTokens: 300,
-      temperature: 0.9,
+      temperature: 1.0,
+      topP: 0.95,
+      topK: 40,
     },
     safetySettings: SAFETY_SETTINGS,
   }
