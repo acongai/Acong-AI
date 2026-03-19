@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { z } from "zod"
 
 import { orchestrateTextReply } from "@/lib/ai/orchestrator"
+import { sanitizeModelText } from "@/lib/ai/sanitize"
 import { debitCredits, InsufficientCreditsError, refundCredits } from "@/lib/billing/credits"
 import {
   completeAssistantMessage,
@@ -138,9 +139,10 @@ export async function POST(request: NextRequest) {
       history,
       userInput: lastUserMessage.content_text,
     })
+    const sanitizedOutputText = sanitizeModelText(orchestration.outputText)
 
     const assistantMessage = await completeAssistantMessage({
-      content: orchestration.outputText,
+      content: sanitizedOutputText,
       messageId: assistantPlaceholder.id,
       metadata: {
         ai_request_id: orchestration.meta.requestId,
