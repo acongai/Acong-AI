@@ -27,6 +27,12 @@ function getApiKey() {
   return key
 }
 
+const RETRY_DELAYS_MS = [1000, 2000, 3000]
+
+function isOverloaded(status: number, message: string | undefined): boolean {
+  return status === 503 || (message?.toLowerCase().includes("high demand") ?? false)
+}
+
 export async function generateTextResponse({
   conversation,
   systemPrompt,
@@ -52,33 +58,47 @@ export async function generateTextResponse({
     safetySettings: SAFETY_SETTINGS,
   }
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  })
+  let lastError: Error | null = null
 
-  const payload = (await response.json()) as {
-    candidates?: Array<{
-      content?: {
-        parts?: Array<{ text?: string }>
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+
+    const payload = (await response.json()) as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{ text?: string }>
+        }
+      }>
+      error?: { message?: string }
+    }
+
+    if (!response.ok) {
+      const errorMessage = payload.error?.message ?? "Gemini API error"
+
+      if (isOverloaded(response.status, errorMessage) && attempt < RETRY_DELAYS_MS.length) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]))
+        lastError = new Error(errorMessage)
+        continue
       }
-    }>
-    error?: { message?: string }
+
+      throw new Error(errorMessage)
+    }
+
+    const text = payload.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+
+    if (!text) {
+      throw new Error("Gemini returned an empty response")
+    }
+
+    return {
+      requestId: null,
+      text,
+    }
   }
 
-  if (!response.ok) {
-    throw new Error(payload.error?.message ?? "Gemini API error")
-  }
-
-  const text = payload.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
-
-  if (!text) {
-    throw new Error("Gemini returned an empty response")
-  }
-
-  return {
-    requestId: null,
-    text,
-  }
+  throw lastError ?? new Error("Gemini API error")
 }
