@@ -22,7 +22,7 @@ Deploys: Vercel (auto-deploy on push to `main`)
 - **shadcn/ui** for base components
 - **Framer Motion** for animations
 - **Supabase** — Auth, Postgres, Storage
-- **OpenAI** — `gpt-4o-mini`, temperature 0.9, max_tokens 400
+- **Google Gemini** — `gemini-2.5-flash-lite`, temperature 0.9, max_tokens 300
 - **Mayar** — Indonesian payment gateway
 - **Vercel** — deployment
 
@@ -59,6 +59,7 @@ Deploys: Vercel (auto-deploy on push to `main`)
 
 /components
   /auth/LoginModal.tsx              — popup-only login/register
+  /auth/ConsentModal.tsx            — one-time consent screen shown after first login
   /chat/
     ChatShell.tsx
     Composer.tsx
@@ -82,7 +83,7 @@ Deploys: Vercel (auto-deploy on push to `main`)
   /ai/
     orchestrator.ts                 — SINGLE entry point for all AI calls
     persona.ts                      — Acong system prompt (do not dilute)
-    openai.ts                       — OpenAI API wrapper
+    gemini.ts                       — Gemini API wrapper
     typo.ts                         — typo score + roast logic
   /auth/
     redirect.ts
@@ -116,6 +117,7 @@ Deploys: Vercel (auto-deploy on push to `main`)
 
 /migrations
   001_initial_schema.sql
+  002_add_has_consented.sql
 
 /public/images
   ACONG BETE.png                    — default mascot (bored)
@@ -129,7 +131,7 @@ Deploys: Vercel (auto-deploy on push to `main`)
 
 | Table | Purpose |
 |---|---|
-| `profiles` | User accounts, extends auth.users. Has `free_credits_granted` bool and `current_plan` text |
+| `profiles` | User accounts, extends auth.users. Has `free_credits_granted`, `current_plan`, and `has_consented` fields |
 | `wallets` | Credit balance per user |
 | `credit_ledger` | Full transaction history (grant/purchase/debit/refund/admin_adjustment) |
 | `chat_threads` | Conversation threads |
@@ -168,15 +170,16 @@ All tables have RLS enabled. Server-side code uses service role key to bypass RL
 - Email/password + Google OAuth via Supabase
 - After login: `onAuthStateChange` triggers credit balance refresh
 - After logout: credit balance immediately reset to null in client state
-- After register: `PricingPopup` shown automatically (once per session via `sessionStorage` flag `pricing_shown`)
+- After login: `ConsentModal` shown if `has_consented = false` in DB — user must accept before proceeding. Decline = sign out.
+- After consent: `PricingPopup` shown automatically (once per session via `sessionStorage` flag `pricing_shown`)
 
 ---
 
 ## AI Persona
 
-- Model: `gpt-4o-mini`
+- Model: `gemini-2.5-flash-lite`
 - Temperature: `0.9`
-- Max tokens: `400`
+- Max tokens: `300`
 - Context window: last 10 messages only
 - System prompt: `lib/ai/persona.ts` — ACONG_SYSTEM_PROMPT
 - Persona: annoying, sarcastic, lazy, reluctant, Indonesian gaul
@@ -211,7 +214,7 @@ All tables have RLS enabled. Server-side code uses service role key to bypass RL
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
-OPENAI_API_KEY
+GEMINI_API_KEY
 MAYAR_API_KEY
 MAYAR_WEBHOOK_SECRET
 MAYAR_BASE_URL
