@@ -48,8 +48,6 @@ interface PricingPopupProps {
   currentPlan?: PlanId
   /** onboarding = post-login, no highlight. manage = from badge click, highlight active. */
   mode?: "onboarding" | "manage"
-  /** Called after a plan is successfully selected and credits are topped up. */
-  onPlanSelected?: () => void
 }
 
 export function PricingPopup({
@@ -58,7 +56,6 @@ export function PricingPopup({
   onClose,
   currentPlan: currentPlanProp,
   mode = "onboarding",
-  onPlanSelected,
 }: PricingPopupProps) {
   const [currentPlan, setCurrentPlan] = useState<PlanId>(currentPlanProp ?? "free")
   const [loading, setLoading] = useState<PlanId | null>(null)
@@ -66,9 +63,10 @@ export function PricingPopup({
 
   // In manage mode without prop, fetch current plan from profile
   useEffect(() => {
-    if (!isOpen || currentPlanProp !== undefined) return
+    if (!isOpen || mode !== "manage" || currentPlanProp !== undefined) return
 
     const supabase = createClient()
+    let cancelled = false
 
     void supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return
@@ -79,11 +77,15 @@ export function PricingPopup({
         .eq("id", user.id)
         .single()
 
-      if (data?.current_plan) {
+      if (!cancelled && data?.current_plan) {
         setCurrentPlan(data.current_plan as PlanId)
       }
     })
-  }, [isOpen, currentPlanProp])
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen, currentPlanProp, mode])
 
   useEffect(() => {
     if (currentPlanProp !== undefined) {

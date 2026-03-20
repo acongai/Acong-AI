@@ -137,7 +137,6 @@ export function Composer({
       isOpen={pricingOpen}
       mode="manage"
       onClose={() => setPricingOpen(false)}
-      onPlanSelected={credits.refresh}
     />
   )
 

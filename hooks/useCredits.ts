@@ -110,6 +110,24 @@ export function useCredits() {
     return () => window.removeEventListener("acong:credits:topup", handler)
   }, [])
 
+  useEffect(() => {
+    const refreshFromForeground = () => {
+      if (document.visibilityState !== "visible") {
+        return
+      }
+
+      setRefreshTick((current) => current + 1)
+    }
+
+    window.addEventListener("focus", refreshFromForeground)
+    document.addEventListener("visibilitychange", refreshFromForeground)
+
+    return () => {
+      window.removeEventListener("focus", refreshFromForeground)
+      document.removeEventListener("visibilitychange", refreshFromForeground)
+    }
+  }, [])
+
   // Sync credits with auth state: reset on logout, refresh on login
   useEffect(() => {
     const supabase = createClient()

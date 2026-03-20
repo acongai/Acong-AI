@@ -71,7 +71,7 @@ export function AppShell({ children }: AppShellProps) {
     }
   }
 
-  async function checkConsent(userId: string) {
+  const checkConsent = useEffectEvent(async (userId: string) => {
     const supabase = createClient()
     const { data } = await supabase
       .from("profiles")
@@ -85,7 +85,7 @@ export function AppShell({ children }: AppShellProps) {
     } else {
       showPricingIfNeeded()
     }
-  }
+  })
 
   function handleConsented() {
     setConsentOpen(false)
@@ -212,7 +212,7 @@ export function AppShell({ children }: AppShellProps) {
       />
 
       <PricingPopup
-        isAuthenticated={true}
+        isAuthenticated={auth.isAuthenticated}
         isOpen={pricingOpen}
         mode="onboarding"
         onClose={() => setPricingOpen(false)}

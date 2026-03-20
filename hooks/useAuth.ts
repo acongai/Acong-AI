@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 
 import { createClient } from "@/supabase/client"
@@ -12,17 +12,15 @@ export function useAuth() {
   const [currentPlan, setCurrentPlan] = useState<string | null>(null)
   const userRef = useRef<User | null>(null)
 
-  async function fetchPlan(userId: string) {
+  const fetchPlan = useEffectEvent(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
       .select("current_plan")
       .eq("id", userId)
       .single()
 
-    if (data?.current_plan) {
-      setCurrentPlan(data.current_plan as string)
-    }
-  }
+    setCurrentPlan((data?.current_plan as string | null) ?? "free")
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -42,6 +40,8 @@ export function useAuth() {
 
       if (currentUser) {
         void fetchPlan(currentUser.id)
+      } else {
+        setCurrentPlan(null)
       }
     }
 
@@ -78,6 +78,24 @@ export function useAuth() {
     }
     window.addEventListener("acong:credits:topup", handler)
     return () => window.removeEventListener("acong:credits:topup", handler)
+  }, [])
+
+  useEffect(() => {
+    const refreshFromForeground = () => {
+      if (document.visibilityState !== "visible" || !userRef.current) {
+        return
+      }
+
+      void fetchPlan(userRef.current.id)
+    }
+
+    window.addEventListener("focus", refreshFromForeground)
+    document.addEventListener("visibilitychange", refreshFromForeground)
+
+    return () => {
+      window.removeEventListener("focus", refreshFromForeground)
+      document.removeEventListener("visibilitychange", refreshFromForeground)
+    }
   }, [])
 
   return {
