@@ -28,36 +28,40 @@ export async function POST(request: Request) {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
+      .limit(10)
 
     if (error) throw error
 
-    const payment = data as PaymentRow | null
+    const payments = (data ?? []) as PaymentRow[]
 
-    if (!payment) {
+    if (payments.length === 0) {
       return NextResponse.json({ status: "no_pending" })
     }
 
-    if (payment.status === "paid") {
-      return NextResponse.json({ status: "already_credited" })
+    for (const payment of payments) {
+      if (payment.status === "paid") {
+        await applyPaidPayment(payment)
+        return NextResponse.json({ status: "already_credited" })
+      }
+
+      const invoiceId = payment.external_invoice_id ?? payment.external_payment_id
+
+      if (!invoiceId) {
+        continue
+      }
+
+      const confirmed = await confirmMayarTransactionPaid(invoiceId)
+
+      if (!confirmed) {
+        continue
+      }
+
+      await applyPaidPayment(payment)
+
+      return NextResponse.json({ status: "credited" })
     }
 
-    const invoiceId = payment.external_invoice_id ?? payment.external_payment_id
-
-    if (!invoiceId) {
-      return NextResponse.json({ status: "no_pending" })
-    }
-
-    const confirmed = await confirmMayarTransactionPaid(invoiceId)
-
-    if (!confirmed) {
-      return NextResponse.json({ status: "not_paid" })
-    }
-
-    await applyPaidPayment(payment)
-
-    return NextResponse.json({ status: "credited" })
+    return NextResponse.json({ status: "not_paid" })
   } catch (error) {
     console.error("payments_verify_error", error)
     return NextResponse.json({ error: "Gagal verifikasi" }, { status: 500 })

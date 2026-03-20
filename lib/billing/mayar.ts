@@ -61,16 +61,20 @@ interface MayarWebhookPayload {
     customerName?: string
     id?: string
     invoiceId?: string
+    paymentLinkId?: string
+    productId?: string
     status?: boolean | string
+    transactionStatus?: boolean | string
     transactionId?: string
     updatedAt?: number | string
   }
-  event?: {
+  event?: string | {
     received?: string
   }
   eventType?: string
   id?: string
   transactionId?: string
+  type?: string
 }
 
 export { CREDIT_PACKAGES }
@@ -87,7 +91,32 @@ function getRequiredEnv(name: string) {
 }
 
 function getMayarApiBaseUrl() {
-  return (process.env.MAYAR_BASE_URL?.trim() || "https://api.mayar.id/hl/v1").replace(/\/$/, "")
+  const rawBaseUrl =
+    process.env.MAYAR_BASE_URL?.trim() || "https://api.mayar.id/hl/v1"
+
+  if (
+    rawBaseUrl === "https://mayar.id/api" ||
+    rawBaseUrl === "http://mayar.id/api"
+  ) {
+    return "https://api.mayar.id/hl/v1"
+  }
+
+  if (
+    rawBaseUrl === "https://api.mayar.id" ||
+    rawBaseUrl === "http://api.mayar.id"
+  ) {
+    return `${rawBaseUrl.replace(/\/$/, "")}/hl/v1`
+  }
+
+  return rawBaseUrl.replace(/\/$/, "")
+}
+
+function normalizeMayarStatus(value?: boolean | string | null) {
+  if (typeof value === "boolean") {
+    return value ? "success" : "failed"
+  }
+
+  return value?.trim().toLowerCase() ?? null
 }
 
 export function getMayarPackages() {
@@ -118,6 +147,11 @@ export async function createMayarInvoice({
       redirectUrl,
       description: `Acong credits - ${packageConfig.credits} credits`,
       expiredAt: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
+      extraData: {
+        localPaymentId: paymentId,
+        threadId: threadId ?? null,
+        userId: user.id,
+      },
       items: [
         {
           description: `${packageConfig.code} - ${packageConfig.credits} credits`,
@@ -176,25 +210,39 @@ export async function confirmMayarTransactionPaid(externalInvoiceId: string): Pr
 
   const payload = (await response.json()) as {
     data?: {
+      paymentLinkId?: string
       status?: boolean | string
+      transactions?: Array<{
+        id?: string
+      }>
     }
   }
 
-  return payload.data?.status === "paid"
+  const invoiceStatus = normalizeMayarStatus(payload.data?.status)
+
+  return invoiceStatus === "paid" || invoiceStatus === "settled"
 }
 
 export function parseMayarWebhookEvent(
   payload: MayarWebhookPayload,
 ): ParsedMayarWebhookEvent {
   const eventType =
-    payload.event?.received ?? payload.eventType ?? "unknown"
+    typeof payload.event === "string"
+      ? payload.event
+      : payload.event?.received ?? payload.eventType ?? payload.type ?? "unknown"
+  const transactionStatus = normalizeMayarStatus(payload.data?.transactionStatus)
+  const deliveryStatus = normalizeMayarStatus(payload.data?.status)
   const externalPaymentId =
     payload.data?.transactionId ??
     payload.transactionId ??
     payload.data?.id ??
     payload.id ??
     null
-  const externalInvoiceId = payload.data?.invoiceId ?? null
+  const externalInvoiceId =
+    payload.data?.invoiceId ??
+    payload.data?.paymentLinkId ??
+    payload.data?.productId ??
+    null
   const timestamp =
     payload.data?.updatedAt ??
     payload.data?.createdAt ??
@@ -203,11 +251,25 @@ export function parseMayarWebhookEvent(
 
   let paymentState: ParsedMayarWebhookEvent["paymentState"] = "unknown"
 
-  if (eventType === "payment.received" || payload.data?.status === "paid" || payload.data?.status === true) {
+  if (
+    eventType === "payment.received" ||
+    transactionStatus === "paid" ||
+    transactionStatus === "success" ||
+    deliveryStatus === "paid" ||
+    deliveryStatus === "success" ||
+    deliveryStatus === "settled"
+  ) {
     paymentState = "paid"
-  } else if (eventType === "payment.reminder" || payload.data?.status === "expired") {
+  } else if (
+    eventType === "payment.reminder" ||
+    transactionStatus === "expired" ||
+    deliveryStatus === "expired"
+  ) {
     paymentState = "expired"
-  } else if (payload.data?.status === false || payload.data?.status === "failed") {
+  } else if (
+    transactionStatus === "failed" ||
+    deliveryStatus === "failed"
+  ) {
     paymentState = "failed"
   }
 
