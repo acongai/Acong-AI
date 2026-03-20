@@ -90,10 +90,12 @@ export async function POST(request: Request) {
       throw paymentInsertError ?? new Error("Payment row was not created")
     }
 
+    const requestOrigin = new URL(request.url).origin
+    const appOrigin = requestOrigin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     const redirectUrl =
       parsedBody.data.threadId
-        ? `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/chat/${parsedBody.data.threadId}`
-        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+        ? `${appOrigin}/chat/${parsedBody.data.threadId}`
+        : appOrigin
 
     const invoice = await createMayarInvoice({
       packageConfig,
