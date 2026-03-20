@@ -149,7 +149,7 @@ export async function createMayarInvoice({
       expiredAt: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
       extraData: {
         localPaymentId: paymentId,
-        threadId: threadId ?? null,
+        ...(threadId ? { threadId } : {}),
         userId: user.id,
       },
       items: [
