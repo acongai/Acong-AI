@@ -72,7 +72,7 @@ export async function generateTextResponse({
     const payload = (await response.json()) as {
       candidates?: Array<{
         content?: {
-          parts?: Array<{ text?: string }>
+          parts?: Array<{ text?: string; thought?: boolean }>
         }
       }>
       error?: { message?: string }
@@ -90,7 +90,12 @@ export async function generateTextResponse({
       throw new Error(errorMessage)
     }
 
-    const text = payload.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+    const parts = payload.candidates?.[0]?.content?.parts ?? []
+    const text = parts
+      .filter((p) => !p.thought)
+      .map((p) => p.text ?? "")
+      .join("")
+      .trim()
 
     if (!text) {
       throw new Error("Gemini returned an empty response")
