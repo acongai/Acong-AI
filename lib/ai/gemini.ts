@@ -19,6 +19,51 @@ interface GenerateTextParams {
   systemPrompt: string
 }
 
+interface GeminiUsageMetadataPayload {
+  cachedContentTokenCount?: number
+  candidatesTokenCount?: number
+  promptTokenCount?: number
+  thoughtsTokenCount?: number
+  toolUsePromptTokenCount?: number
+  totalTokenCount?: number
+}
+
+export interface GeminiUsageMetadata {
+  [key: string]: number | null
+  cachedContentTokenCount: number | null
+  candidatesTokenCount: number | null
+  promptTokenCount: number | null
+  thoughtsTokenCount: number | null
+  toolUsePromptTokenCount: number | null
+  totalTokenCount: number | null
+}
+
+export interface GeminiResponseMeta {
+  finishMessage: string | null
+  finishReason: string | null
+  requestId: string | null
+  responseId: string | null
+  usageMetadata: GeminiUsageMetadata | null
+}
+
+export class GeminiMaxTokensError extends Error {
+  meta: GeminiResponseMeta
+  text: string
+
+  constructor({
+    meta,
+    text,
+  }: {
+    meta: GeminiResponseMeta
+    text: string
+  }) {
+    super(meta.finishMessage ?? "Gemini response hit max output tokens")
+    this.name = "GeminiMaxTokensError"
+    this.meta = meta
+    this.text = text
+  }
+}
+
 function getApiKey() {
   const key = process.env.GEMINI_API_KEY
   if (!key) {
@@ -28,9 +73,49 @@ function getApiKey() {
 }
 
 const RETRY_DELAYS_MS = [1000, 2000, 3000]
+const MAX_TOKENS_FINISH_REASONS = new Set([
+  "FINISH_REASON_MAX_TOKENS",
+  "MAX_TOKENS",
+])
 
 function isOverloaded(status: number, message: string | undefined): boolean {
   return status === 503 || (message?.toLowerCase().includes("high demand") ?? false)
+}
+
+function normalizeUsageMetadata(
+  usageMetadata?: GeminiUsageMetadataPayload,
+): GeminiUsageMetadata | null {
+  if (!usageMetadata) {
+    return null
+  }
+
+  return {
+    cachedContentTokenCount: usageMetadata.cachedContentTokenCount ?? null,
+    candidatesTokenCount: usageMetadata.candidatesTokenCount ?? null,
+    promptTokenCount: usageMetadata.promptTokenCount ?? null,
+    thoughtsTokenCount: usageMetadata.thoughtsTokenCount ?? null,
+    toolUsePromptTokenCount: usageMetadata.toolUsePromptTokenCount ?? null,
+    totalTokenCount: usageMetadata.totalTokenCount ?? null,
+  }
+}
+
+function logGeminiResponse({
+  candidateTokenCount,
+  meta,
+  text,
+}: {
+  candidateTokenCount: number | null
+  meta: GeminiResponseMeta
+  text: string
+}) {
+  console.info("gemini_generate_response", {
+    finish_message: meta.finishMessage,
+    finish_reason: meta.finishReason,
+    output_token_count: meta.usageMetadata?.candidatesTokenCount ?? candidateTokenCount,
+    response_id: meta.responseId,
+    response_text_length: text.length,
+    total_token_count: meta.usageMetadata?.totalTokenCount ?? null,
+  })
 }
 
 export async function generateTextResponse({
@@ -74,8 +159,13 @@ export async function generateTextResponse({
         content?: {
           parts?: Array<{ text?: string; thought?: boolean }>
         }
+        finishMessage?: string
+        finishReason?: string
+        tokenCount?: number
       }>
       error?: { message?: string }
+      responseId?: string
+      usageMetadata?: GeminiUsageMetadataPayload
     }
 
     if (!response.ok) {
@@ -90,20 +180,45 @@ export async function generateTextResponse({
       throw new Error(errorMessage)
     }
 
-    const parts = payload.candidates?.[0]?.content?.parts ?? []
+    const candidate = payload.candidates?.[0]
+    const parts = candidate?.content?.parts ?? []
     const text = parts
       .filter((p) => !p.thought)
       .map((p) => p.text ?? "")
       .join("")
       .trim()
+    const meta: GeminiResponseMeta = {
+      finishMessage: candidate?.finishMessage ?? null,
+      finishReason: candidate?.finishReason ?? null,
+      requestId: payload.responseId ?? null,
+      responseId: payload.responseId ?? null,
+      usageMetadata: normalizeUsageMetadata(payload.usageMetadata),
+    }
+
+    logGeminiResponse({
+      candidateTokenCount: candidate?.tokenCount ?? null,
+      meta,
+      text,
+    })
+
+    if (meta.finishReason && MAX_TOKENS_FINISH_REASONS.has(meta.finishReason)) {
+      throw new GeminiMaxTokensError({
+        meta,
+        text,
+      })
+    }
 
     if (!text) {
       throw new Error("Gemini returned an empty response")
     }
 
     return {
-      requestId: null,
+      finishMessage: meta.finishMessage,
+      finishReason: meta.finishReason,
+      requestId: meta.requestId,
+      responseId: meta.responseId,
       text,
+      usageMetadata: meta.usageMetadata,
     }
   }
 

@@ -1,5 +1,5 @@
 import { ACONG_SYSTEM_PROMPT } from "@/lib/ai/persona"
-import { generateTextResponse } from "@/lib/ai/gemini"
+import { type GeminiUsageMetadata, generateTextResponse } from "@/lib/ai/gemini"
 import {
   computeTypoScore,
   getTypoRoastInstruction,
@@ -13,9 +13,13 @@ export interface OrchestratorMessage {
 
 export interface OrchestratorResult {
   meta: {
+    finishMessage: string | null
+    finishReason: string | null
     requestId: string | null
+    responseId: string | null
     roastApplied: boolean
     typoScore: number
+    usageMetadata: GeminiUsageMetadata | null
   }
   outputText: string
   outputType: "text"
@@ -45,9 +49,13 @@ export async function orchestrateTextReply({
 
   return {
     meta: {
+      finishMessage: response.finishMessage,
+      finishReason: response.finishReason,
       requestId: response.requestId,
+      responseId: response.responseId,
       roastApplied,
       typoScore,
+      usageMetadata: response.usageMetadata,
     },
     outputText: response.text,
     outputType: "text",

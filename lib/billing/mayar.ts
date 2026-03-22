@@ -1,4 +1,5 @@
 
+import { GeminiMaxTokensError } from "@/lib/ai/gemini"
 import { orchestrateTextReply } from "@/lib/ai/orchestrator"
 import { sanitizeModelText } from "@/lib/ai/sanitize"
 import {
@@ -412,7 +413,11 @@ export async function processAwaitingPaymentMessage(userId: string) {
       content: sanitizedOutputText,
       messageId: pendingAssistantMessage.id,
       metadata: {
+        ai_finish_message: orchestration.meta.finishMessage,
+        ai_finish_reason: orchestration.meta.finishReason,
         ai_request_id: orchestration.meta.requestId,
+        ai_response_id: orchestration.meta.responseId,
+        ai_usage_metadata: orchestration.meta.usageMetadata,
         resumed_from_payment: true,
         roast_applied: orchestration.meta.roastApplied,
         typo_score: orchestration.meta.typoScore,
@@ -423,8 +428,25 @@ export async function processAwaitingPaymentMessage(userId: string) {
     await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
     return assistantMessage
   } catch (error) {
+    const maxTokensMeta =
+      error instanceof GeminiMaxTokensError
+        ? {
+            ai_finish_message: error.meta.finishMessage,
+            ai_finish_reason: error.meta.finishReason,
+            ai_request_id: error.meta.requestId,
+            ai_response_id: error.meta.responseId,
+            ai_usage_metadata: error.meta.usageMetadata,
+            response_text_length: error.text.length,
+          }
+        : null
+
     console.error("awaiting_payment_generation_error", {
       error,
+      finish_reason: maxTokensMeta?.ai_finish_reason ?? null,
+      output_token_count:
+        maxTokensMeta?.ai_usage_metadata?.candidatesTokenCount ?? null,
+      response_text_length: maxTokensMeta?.response_text_length ?? null,
+      total_token_count: maxTokensMeta?.ai_usage_metadata?.totalTokenCount ?? null,
       message_id: pendingAssistantMessage.id,
       thread_id: thread.id,
       user_id: userId,
@@ -437,6 +459,7 @@ export async function processAwaitingPaymentMessage(userId: string) {
       content: failureMessage,
       messageId: pendingAssistantMessage.id,
       metadata: {
+        ...(maxTokensMeta ?? {}),
         stage: "payment_resume",
       },
       userId,
