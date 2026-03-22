@@ -52,7 +52,7 @@ export async function generateTextResponse({
       parts: [{ text: systemPrompt }],
     },
     generationConfig: {
-      maxOutputTokens: 300,
+      maxOutputTokens: 500,
       temperature: 1.0,
       topP: 0.95,
       topK: 40,

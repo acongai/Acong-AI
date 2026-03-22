@@ -1,6 +1,6 @@
 # Acong-AI
 
-Acong is a production-oriented V1 AI chat app built with Next.js, Supabase, OpenAI, Tailwind, shadcn/ui, Framer Motion, and Mayar. The app enforces a credit wallet on every successful send/regenerate, grants 5 free credits on first login, supports image attachments, and keeps the assistant persona sarcastic but not genuinely harmful.
+Acong is a production-oriented V1 AI chat app built with Next.js, Supabase, Google Gemini, Tailwind, shadcn/ui, Framer Motion, and Mayar. The app enforces a credit wallet on every successful send/regenerate, grants 5 free credits on first login, supports image attachments, and keeps the assistant persona sarcastic but not genuinely harmful.
 
 ## Stack
 
@@ -10,7 +10,7 @@ Acong is a production-oriented V1 AI chat app built with Next.js, Supabase, Open
 - shadcn/ui
 - Framer Motion
 - Supabase Auth, Postgres, and Storage
-- OpenAI `gpt-4o-mini`
+- Google Gemini `gemini-2.5-flash`
 - Mayar payments
 - ESLint
 
@@ -53,7 +53,7 @@ The exact template lives in [.env.example](/Users/adranoer/Documents/ACONG%20AI/
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL used by browser and server SSR clients.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anon key used by browser and SSR auth clients.
 - `SUPABASE_SERVICE_ROLE_KEY`: service-role key used for privileged writes, wallet updates, payments, and onboarding.
-- `OPENAI_API_KEY`: OpenAI API key for the Acong text orchestrator.
+- `GEMINI_API_KEY`: Google Gemini API key for the Acong text orchestrator.
 - `MAYAR_API_KEY`: Mayar API key used to create checkout invoices.
 - `MAYAR_WEBHOOK_SECRET`: shared secret used to validate webhook signatures.
 - `MAYAR_BASE_URL`: configurable Mayar API base URL.
@@ -113,7 +113,7 @@ The exact template lives in [.env.example](/Users/adranoer/Documents/ACONG%20AI/
 - 5 free credits granted once per account
 - Credit ledger for sends, regenerates, refunds, and purchases
 - Real thread/message persistence in Supabase
-- OpenAI orchestration with typo-roast injection
+- Gemini orchestration with typo-roast injection
 - Mayar checkout flow and webhook credit top-up
 - Resume generation for `awaiting_payment` messages after payment
 - Image upload to Supabase Storage and inline image rendering
@@ -125,4 +125,4 @@ The exact template lives in [.env.example](/Users/adranoer/Documents/ACONG%20AI/
 - Create the `attachments` bucket and apply the storage policy you want in production.
 - Supply a real customer mobile number flow for Mayar checkout instead of the temporary placeholder used in V1.
 - Configure production auth redirect URLs in Supabase.
-- Add your real OpenAI API key.
+- Add your real Gemini API key.

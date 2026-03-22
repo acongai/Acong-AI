@@ -22,7 +22,7 @@ Deploys: Vercel (auto-deploy on push to `main`)
 - **shadcn/ui** for base components
 - **Framer Motion** for animations
 - **Supabase** — Auth, Postgres, Storage
-- **Google Gemini** — `gemini-2.5-flash-lite`, temperature 0.9, max_tokens 300
+- **Google Gemini** — `gemini-2.5-flash`, temperature 0.9, max_tokens 500
 - **Mayar** — Indonesian payment gateway
 - **Vercel** — deployment
 
@@ -177,9 +177,9 @@ All tables have RLS enabled. Server-side code uses service role key to bypass RL
 
 ## AI Persona
 
-- Model: `gemini-2.5-flash-lite`
+- Model: `gemini-2.5-flash`
 - Temperature: `0.9`
-- Max tokens: `300`
+- Max tokens: `500`
 - Context window: last 10 messages only
 - System prompt: `lib/ai/persona.ts` — ACONG_SYSTEM_PROMPT
 - Persona: annoying, sarcastic, lazy, reluctant, Indonesian gaul
