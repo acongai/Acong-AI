@@ -41,27 +41,10 @@ export interface GeminiUsageMetadata {
 export interface GeminiResponseMeta {
   finishMessage: string | null
   finishReason: string | null
+  isTruncated: boolean
   requestId: string | null
   responseId: string | null
   usageMetadata: GeminiUsageMetadata | null
-}
-
-export class GeminiMaxTokensError extends Error {
-  meta: GeminiResponseMeta
-  text: string
-
-  constructor({
-    meta,
-    text,
-  }: {
-    meta: GeminiResponseMeta
-    text: string
-  }) {
-    super(meta.finishMessage ?? "Gemini response hit max output tokens")
-    this.name = "GeminiMaxTokensError"
-    this.meta = meta
-    this.text = text
-  }
 }
 
 function getApiKey() {
@@ -111,6 +94,7 @@ function logGeminiResponse({
   console.info("gemini_generate_response", {
     finish_message: meta.finishMessage,
     finish_reason: meta.finishReason,
+    is_truncated: meta.isTruncated,
     output_token_count: meta.usageMetadata?.candidatesTokenCount ?? candidateTokenCount,
     response_id: meta.responseId,
     response_text_length: text.length,
@@ -187,9 +171,11 @@ export async function generateTextResponse({
       .map((p) => p.text ?? "")
       .join("")
       .trim()
+    const finishReason = candidate?.finishReason ?? null
     const meta: GeminiResponseMeta = {
       finishMessage: candidate?.finishMessage ?? null,
-      finishReason: candidate?.finishReason ?? null,
+      finishReason,
+      isTruncated: finishReason ? MAX_TOKENS_FINISH_REASONS.has(finishReason) : false,
       requestId: payload.responseId ?? null,
       responseId: payload.responseId ?? null,
       usageMetadata: normalizeUsageMetadata(payload.usageMetadata),
@@ -201,13 +187,6 @@ export async function generateTextResponse({
       text,
     })
 
-    if (meta.finishReason && MAX_TOKENS_FINISH_REASONS.has(meta.finishReason)) {
-      throw new GeminiMaxTokensError({
-        meta,
-        text,
-      })
-    }
-
     if (!text) {
       throw new Error("Gemini returned an empty response")
     }
@@ -215,6 +194,7 @@ export async function generateTextResponse({
     return {
       finishMessage: meta.finishMessage,
       finishReason: meta.finishReason,
+      isTruncated: meta.isTruncated,
       requestId: meta.requestId,
       responseId: meta.responseId,
       text,

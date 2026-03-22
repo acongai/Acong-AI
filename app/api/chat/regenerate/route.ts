@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { z } from "zod"
 
-import { GeminiMaxTokensError } from "@/lib/ai/gemini"
 import { orchestrateTextReply } from "@/lib/ai/orchestrator"
 import { sanitizeModelText } from "@/lib/ai/sanitize"
 import { debitCredits, InsufficientCreditsError, refundCredits } from "@/lib/billing/credits"
@@ -148,6 +147,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         ai_finish_message: orchestration.meta.finishMessage,
         ai_finish_reason: orchestration.meta.finishReason,
+        ai_is_truncated: orchestration.meta.isTruncated,
         ai_request_id: orchestration.meta.requestId,
         ai_response_id: orchestration.meta.responseId,
         ai_usage_metadata: orchestration.meta.usageMetadata,
@@ -164,25 +164,8 @@ export async function POST(request: NextRequest) {
       threadId: thread.id,
     })
   } catch (error) {
-    const maxTokensMeta =
-      error instanceof GeminiMaxTokensError
-        ? {
-            ai_finish_message: error.meta.finishMessage,
-            ai_finish_reason: error.meta.finishReason,
-            ai_request_id: error.meta.requestId,
-            ai_response_id: error.meta.responseId,
-            ai_usage_metadata: error.meta.usageMetadata,
-            response_text_length: error.text.length,
-          }
-        : null
-
     console.error("chat_regenerate_error", {
       error,
-      finish_reason: maxTokensMeta?.ai_finish_reason ?? null,
-      output_token_count:
-        maxTokensMeta?.ai_usage_metadata?.candidatesTokenCount ?? null,
-      response_text_length: maxTokensMeta?.response_text_length ?? null,
-      total_token_count: maxTokensMeta?.ai_usage_metadata?.totalTokenCount ?? null,
       thread_id: thread.id,
       user_id: user.id,
     })
@@ -193,7 +176,6 @@ export async function POST(request: NextRequest) {
       content: failureMessage,
       messageId: assistantPlaceholder.id,
       metadata: {
-        ...(maxTokensMeta ?? {}),
         stage: "regenerate",
       },
       userId: user.id,

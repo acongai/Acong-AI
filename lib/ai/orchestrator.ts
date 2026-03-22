@@ -15,6 +15,7 @@ export interface OrchestratorResult {
   meta: {
     finishMessage: string | null
     finishReason: string | null
+    isTruncated: boolean
     requestId: string | null
     responseId: string | null
     roastApplied: boolean
@@ -51,6 +52,7 @@ export async function orchestrateTextReply({
     meta: {
       finishMessage: response.finishMessage,
       finishReason: response.finishReason,
+      isTruncated: response.isTruncated,
       requestId: response.requestId,
       responseId: response.responseId,
       roastApplied,
