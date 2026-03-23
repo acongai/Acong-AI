@@ -100,6 +100,14 @@ function logGeminiResponse({
     response_text_length: text.length,
     total_token_count: meta.usageMetadata?.totalTokenCount ?? null,
   })
+
+  if (meta.finishReason && meta.finishReason !== "STOP") {
+    console.warn("gemini_unexpected_finish_reason", {
+      finish_message: meta.finishMessage,
+      finish_reason: meta.finishReason,
+      response_id: meta.responseId,
+    })
+  }
 }
 
 export async function generateTextResponse({
