@@ -132,7 +132,7 @@ export async function generateTextResponse({
       maxOutputTokens: 500,
       stopSequences: [],
       temperature: 1.0,
-      thinkingBudget: 0,
+      thinkingConfig: { thinkingBudget: 0 },
       topP: 0.95,
       topK: 40,
     },
