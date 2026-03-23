@@ -1,6 +1,5 @@
 
 import { orchestrateTextReply } from "@/lib/ai/orchestrator"
-import { sanitizeModelText } from "@/lib/ai/sanitize"
 import {
   debitCredits,
   InsufficientCreditsError,
@@ -406,10 +405,8 @@ export async function processAwaitingPaymentMessage(userId: string) {
       history,
       userInput: parentUserMessage.content_text,
     })
-    const sanitizedOutputText = sanitizeModelText(orchestration.outputText)
-
     const assistantMessage = await completeAssistantMessage({
-      content: sanitizedOutputText,
+      content: orchestration.outputText,
       messageId: pendingAssistantMessage.id,
       metadata: {
         ai_finish_message: orchestration.meta.finishMessage,
