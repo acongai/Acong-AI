@@ -12,9 +12,6 @@ const barlow = Barlow({
 export const metadata: Metadata = {
   title: "Acong",
   description: "AI chat app with a sarcastic, reluctant persona.",
-  icons: {
-    icon: "/images/ACONG BETE.png",
-  },
 };
 
 export default function RootLayout({
