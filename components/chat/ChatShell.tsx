@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 
 import { useThread } from "@/hooks/useThread"
 import { PaywallModal } from "@/components/payments/PaywallModal"
-import { COPY } from "@/lib/copy"
+import { useLanguage } from "@/hooks/useLanguage"
 
 import { Composer } from "./Composer"
 import { EmptyStateMascot } from "./EmptyStateMascot"
@@ -16,6 +16,7 @@ interface ChatShellProps {
 }
 
 export function ChatShell({ threadId }: ChatShellProps) {
+  const { copy } = useLanguage()
   const [draft, setDraft] = useState("")
   const thread = useThread({
     includeMessages: true,
@@ -32,6 +33,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
   const refresh = thread.refresh
   const regenerateLastReply = thread.regenerateLastReply
   const sendMessage = thread.sendMessage
+  const failureMessage = copy.errorMessage
 
   const hasMessages = messages.length > 0
   const handleLoginClosed = useEffectEvent(() => {
@@ -90,8 +92,8 @@ export function ChatShell({ threadId }: ChatShellProps) {
           ) : null}
 
           <MessageList
-            emptySubtitle={COPY.emptyStateSubtitle}
-            emptyTitle={COPY.emptyStateTitle}
+            emptySubtitle={copy.emptyStateSubtitle}
+            emptyTitle={copy.emptyStateTitle}
             isGenerating={isSending}
             messages={messages}
           />

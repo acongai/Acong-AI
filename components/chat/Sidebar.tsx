@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 
 import { ThreadList } from "@/components/chat/ThreadList"
 import { GradientButton } from "@/components/ui/gradient-button"
-import { COPY } from "@/lib/copy"
+import { useLanguage } from "@/hooks/useLanguage"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { createClient } from "@/supabase/client"
 import type { AppThread } from "@/types"
@@ -36,6 +36,7 @@ export function Sidebar({
   const pathname = usePathname()
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { copy } = useLanguage()
 
   function handleNewThread() {
     onNavigate?.()
@@ -74,7 +75,7 @@ export function Sidebar({
         <div className="space-y-4">
           <div className="px-2 text-center">
             <p className="text-5xl tracking-tight text-[#111111]" style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", fontWeight: 800 }}>
-              {COPY.brandName}
+              {copy.brandName}
             </p>
           </div>
 
@@ -84,7 +85,7 @@ export function Sidebar({
             type="button"
           >
             <MessageSquarePlus className="mr-2 h-4 w-4" />
-            {COPY.sidebar.newThread}
+            {copy.sidebar.newThread}
           </GradientButton>
         </div>
 
@@ -151,7 +152,7 @@ export function Sidebar({
                   <User className="h-3.5 w-3.5 text-[#666666]" />
                 </div>
                 <p className="text-xs font-medium text-[#999999]">
-                  {COPY.sidebar.loginButton}
+                    {copy.sidebar.loginButton}
                 </p>
               </div>
             </button>

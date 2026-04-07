@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { CreditBadge } from "@/components/payments/CreditBadge"
 import { PricingPopup } from "@/components/payments/PricingPopup"
-import { COPY } from "@/lib/copy"
 import { useAuth } from "@/hooks/useAuth"
 import { useCredits } from "@/hooks/useCredits"
+import { useLanguage } from "@/hooks/useLanguage"
 
 interface ComposerProps {
   disabled?: boolean
@@ -37,6 +37,7 @@ export function Composer({
   const [pricingOpen, setPricingOpen] = useState(false)
   const auth = useAuth()
   const credits = useCredits()
+  const { copy } = useLanguage()
   const handleCreditDeducted = useEffectEvent(() => {
     credits.refresh()
   })
@@ -87,7 +88,7 @@ export function Composer({
             void handleSubmit(value)
           }
         }}
-        placeholder={COPY.composer.placeholder}
+        placeholder={copy.composer.placeholder}
         ref={textareaRef}
         rows={1}
         value={value}
@@ -103,7 +104,7 @@ export function Composer({
             variant="ghost"
           >
             <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-            {COPY.regenerateLabel}
+            {copy.regenerateLabel}
           </Button>
         </div>
 
@@ -120,7 +121,7 @@ export function Composer({
             className="flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center text-[#111111] transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 md:rounded-full md:bg-white md:shadow-sm md:hover:bg-[#f0f0f0]"
             disabled={!canSend}
             onClick={() => void handleSubmit(value)}
-            title={COPY.composer.sendLabel}
+            title={copy.composer.sendLabel}
             type="button"
           >
             <SendHorizontal className="h-4 w-4" />

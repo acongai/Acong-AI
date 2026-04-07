@@ -51,6 +51,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Language detection
+  const hasLocale = request.cookies.has("NEXT_LOCALE")
+  if (!hasLocale) {
+    const country = request.headers.get("x-vercel-ip-country") || "ID"
+    const defaultLocale = country === "ID" ? "id" : "en"
+    response.cookies.set("NEXT_LOCALE", defaultLocale, {
+      path: "/",
+      maxAge: 31536000, // 1 year
+    })
+  }
+
   return {
     response,
     supabase,

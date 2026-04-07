@@ -12,6 +12,7 @@ import {
 } from "@/lib/chat/messages"
 import { getThreadForUser, touchThread } from "@/lib/chat/threads"
 import { COPY } from "@/lib/copy"
+import { COPY_EN } from "@/lib/copy-en"
 import { createClient } from "@/supabase/server"
 import { checkRateLimit, getClientIp } from "@/lib/utils/ratelimit"
 
@@ -27,10 +28,13 @@ export async function POST(request: NextRequest) {
     windowMs: 60_000,
   })
 
+  const locale = (request.cookies.get("NEXT_LOCALE")?.value as "id" | "en") || "id"
+  const copy = locale === "en" ? COPY_EN : COPY
+
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {
-        error: COPY.api.regenerateRateLimit,
+        error: copy.api.regenerateRateLimit,
       },
       { status: 429 },
     )
@@ -44,7 +48,7 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json(
       {
-        error: COPY.api.regenerateUnauthorized,
+        error: copy.api.regenerateUnauthorized,
       },
       { status: 401 },
     )
@@ -56,7 +60,7 @@ export async function POST(request: NextRequest) {
   if (!parsedBody.success) {
     return NextResponse.json(
       {
-        error: COPY.api.regenerateInvalid,
+        error: copy.api.regenerateInvalid,
       },
       { status: 400 },
     )
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
   if (!thread) {
     return NextResponse.json(
       {
-        error: COPY.api.regenerateMissingThread,
+        error: copy.api.regenerateMissingThread,
       },
       { status: 404 },
     )
@@ -78,7 +82,7 @@ export async function POST(request: NextRequest) {
   if (!lastUserMessage?.content_text) {
     return NextResponse.json(
       {
-        error: COPY.api.regenerateMissingUserPrompt,
+        error: copy.api.regenerateMissingUserPrompt,
       },
       { status: 400 },
     )
@@ -101,7 +105,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: COPY.api.regenerateNoCredits,
+          error: copy.api.regenerateNoCredits,
           messageId: awaitingPaymentMessage.id,
           threadId: thread.id,
         },
@@ -136,6 +140,7 @@ export async function POST(request: NextRequest) {
 
     const orchestration = await orchestrateTextReply({
       history,
+      locale,
       userInput: lastUserMessage.content_text,
     })
     const assistantMessage = await completeAssistantMessage({
@@ -167,7 +172,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
     })
 
-    const failureMessage = COPY.errorMessage
+    const failureMessage = copy.errorMessage
 
     await failAssistantMessage({
       content: failureMessage,

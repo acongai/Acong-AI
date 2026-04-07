@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "AI chat app with a sarcastic, reluctant persona.",
 };
 
+import { LanguageProvider } from "@/hooks/useLanguage";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +26,9 @@ export default function RootLayout({
       <body
         className={`${barlow.variable} bg-background font-sans text-foreground antialiased`}
       >
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
         <Toaster
           position="top-center"
           richColors

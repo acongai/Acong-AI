@@ -15,7 +15,16 @@ export function shouldRoastTypo(score: number): boolean {
   return score >= 3
 }
 
-export function getTypoRoastInstruction(): string {
+export function getTypoRoastInstruction(locale: "id" | "en" = "id"): string {
+  if (locale === "en") {
+    const lines = [
+      "Before answering, roast their typo or typing style with one short sarcastic sentence.",
+      "Start your answer with one short sentence questioning their ability to type, then answer the question.",
+      "Drop one quick insult about their messy input, then answer.",
+    ]
+    return lines[Math.floor(Math.random() * lines.length)]
+  }
+
   const lines = [
     "Sebelum menjawab, komentari typo atau cara ngetik user dengan satu kalimat singkat yang sarkastis.",
     "Mulai jawaban dengan satu kalimat pendek yang mempertanyakan cara user mengetik, lalu jawab pertanyaannya.",

@@ -11,6 +11,7 @@ import { MobileNav } from "@/components/layout/MobileNav"
 import { PricingPopup } from "@/components/payments/PricingPopup"
 import { useAuth } from "@/hooks/useAuth"
 import { useThread } from "@/hooks/useThread"
+import { useLanguage } from "@/hooks/useLanguage"
 import { COPY } from "@/lib/copy"
 import { createClient } from "@/supabase/client"
 
@@ -38,6 +39,7 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const auth = useAuth()
+  const { locale, setLocale } = useLanguage()
 
   const PLAN_LABELS: Record<string, string> = {
     free: "Ga Modal",
@@ -184,7 +186,24 @@ export function AppShell({ children }: AppShellProps) {
         />
       </MobileDrawer>
 
-      <div className="h-[calc(100vh-1rem)] overflow-hidden pb-14 md:pb-0 md:pl-[260px]">
+      <div className="relative h-[calc(100vh-1rem)] overflow-hidden pb-14 md:pb-0 md:pl-[260px]">
+        {/* Language Toggle in Main Section */}
+        <div className="absolute right-6 top-5 z-20 flex gap-1.5 text-[10px] font-bold text-[#999999]">
+          <button 
+            onClick={() => setLocale("id")}
+            className={`transition-colors hover:text-[#111111] ${locale === "id" ? "text-[#111111] underline underline-offset-4" : ""}`}
+          >
+            ID
+          </button>
+          <span className="opacity-30">/</span>
+          <button 
+            onClick={() => setLocale("en")}
+            className={`transition-colors hover:text-[#111111] ${locale === "en" ? "text-[#111111] underline underline-offset-4" : ""}`}
+          >
+            EN
+          </button>
+        </div>
+
         <main className="h-full">{children}</main>
       </div>
 

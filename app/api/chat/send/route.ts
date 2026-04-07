@@ -17,6 +17,7 @@ import {
   touchThread,
 } from "@/lib/chat/threads"
 import { COPY } from "@/lib/copy"
+import { COPY_EN } from "@/lib/copy-en"
 import { attachUploadsToMessage } from "@/lib/storage/upload"
 import { createClient } from "@/supabase/server"
 import { checkRateLimit, getClientIp } from "@/lib/utils/ratelimit"
@@ -35,10 +36,13 @@ export async function POST(request: NextRequest) {
     windowMs: 60_000,
   })
 
+  const locale = (request.cookies.get("NEXT_LOCALE")?.value as "id" | "en") || "id"
+  const copy = locale === "en" ? COPY_EN : COPY
+
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {
-        error: COPY.api.sendRateLimit,
+        error: copy.api.sendRateLimit,
       },
       { status: 429 },
     )
@@ -52,7 +56,7 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json(
       {
-        error: COPY.api.sendUnauthorized,
+        error: copy.api.sendUnauthorized,
       },
       { status: 401 },
     )
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
   if (!parsedBody.success) {
     return NextResponse.json(
       {
-        error: COPY.api.sendInvalid,
+        error: copy.api.sendInvalid,
       },
       { status: 400 },
     )
@@ -80,7 +84,7 @@ export async function POST(request: NextRequest) {
   if (!initialThread) {
     return NextResponse.json(
       {
-        error: COPY.api.sendThreadMissing,
+        error: copy.api.sendThreadMissing,
       },
       { status: 404 },
     )
@@ -126,7 +130,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: COPY.api.sendNoCredits,
+          error: copy.api.sendNoCredits,
           messageId: awaitingPaymentMessage.id,
           threadId: thread.id,
         },
@@ -142,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: COPY.api.sendDebitFailed,
+        error: copy.api.sendDebitFailed,
       },
       { status: 500 },
     )
@@ -166,6 +170,7 @@ export async function POST(request: NextRequest) {
 
     const orchestration = await orchestrateTextReply({
       history,
+      locale,
       userInput: content,
     })
     const assistantMessage = await completeAssistantMessage({
@@ -200,7 +205,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
     })
 
-    const failureMessage = COPY.errorMessage
+    const failureMessage = copy.errorMessage
 
     await failAssistantMessage({
       content: failureMessage,
