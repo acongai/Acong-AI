@@ -95,18 +95,18 @@ export function ThreadList({
                 className={cn(
                   "group block rounded-lg border px-3 py-2 transition-colors",
                   active
-                    ? "border-[#D0D0D0] border-l-2 border-l-[#111111] bg-white"
-                    : "border-[#E4E4E4] bg-white hover:bg-[#F8F8F8]",
+                    ? "border-[var(--sidebar-border)] border-l-2 border-l-[var(--primary)] bg-[var(--sidebar-accent)]"
+                    : "border-[var(--sidebar-border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-accent)]",
                 )}
                 href={`/chat/${thread.id}`}
                 onClick={onNavigate}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium text-[#111111]">
+                    <p className="truncate text-xs font-medium text-[var(--sidebar-foreground)]">
                       {thread.title}
                     </p>
-                    <p className="truncate text-[11px] leading-4 text-[#999999]">
+                    <p className="truncate text-[11px] leading-4 text-[var(--muted-foreground)]">
                       {thread.preview}
                     </p>
                   </div>

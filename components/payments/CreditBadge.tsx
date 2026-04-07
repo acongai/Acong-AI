@@ -28,12 +28,12 @@ export function CreditBadge({
 
   return (
     <button
-      className="flex cursor-pointer items-center gap-1.5 text-sm text-[#666666]"
+      className="flex cursor-pointer items-center gap-1.5 text-sm text-[var(--muted-foreground)]"
       onClick={onClick}
       type="button"
     >
       <Coins className="h-4 w-4" />
-      <span className="font-semibold text-[#111111]">{balanceLabel}</span>
+      <span className="font-semibold text-[var(--foreground)]">{balanceLabel}</span>
 
       {lowCredits ? (
         <span className="flex items-center gap-0.5 text-xs text-[#F76B15]">

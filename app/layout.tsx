@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 };
 
 import { LanguageProvider } from "@/hooks/useLanguage";
+import { ThemeProvider } from "@/hooks/useTheme";
 
 export default function RootLayout({
   children,
@@ -26,9 +27,11 @@ export default function RootLayout({
       <body
         className={`${barlow.variable} bg-background font-sans text-foreground antialiased`}
       >
-        <LanguageProvider>
-          {children}
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
+        </ThemeProvider>
         <Toaster
           position="top-center"
           richColors

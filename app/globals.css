@@ -83,6 +83,37 @@
   --sidebar-accent-foreground: #111111;
   --sidebar-border: #e4e4e4;
   --sidebar-ring: #111111;
+  --dot-color: #00000026;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --card: #161616;
+  --card-foreground: #ffffff;
+  --popover: #161616;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #0a0a0a;
+  --secondary: #1c1c1c;
+  --secondary-foreground: #ffffff;
+  --muted: #161616;
+  --muted-foreground: #a0a0a0;
+  --accent: #161616;
+  --accent-foreground: #ffffff;
+  --destructive: #ff4d4f;
+  --border: #262626;
+  --input: #262626;
+  --ring: #ffffff;
+  --sidebar: #111111;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #1c1c1c;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #262626;
+  --sidebar-ring: #ffffff;
+  --dot-color: #ffffff1a;
 }
 
 @layer base {
@@ -96,8 +127,8 @@
 
   body {
     min-height: 100vh;
-    background-color: #f2f2f2;
-    color: #111111;
+    background-color: var(--background);
+    color: var(--foreground);
     font-size: 14px;
     line-height: 1.6;
     letter-spacing: -0.01em;
@@ -289,7 +320,7 @@
 
   ::-webkit-scrollbar-thumb {
     border-radius: 999px;
-    background: #d0d0d0;
+    background: var(--border);
   }
 
   ::-webkit-scrollbar-track {

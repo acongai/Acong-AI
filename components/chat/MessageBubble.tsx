@@ -41,15 +41,15 @@ export function MessageBubble({ index, message }: MessageBubbleProps) {
         className={cn(
           "max-w-[88%] px-4 py-3 text-[14px] leading-relaxed md:max-w-[75%]",
           isUser
-            ? "rounded-md rounded-br-none bg-[#111111] text-white"
-            : "rounded-md rounded-tl-none border border-[#E4E4E4] bg-white text-[#111111] shadow-sm",
+            ? "rounded-md rounded-br-none bg-[var(--primary)] text-[var(--primary-foreground)] border border-[var(--primary)]"
+            : "rounded-md rounded-tl-none border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm",
         )}
       >
         {message.attachments?.length ? (
           <div className="mb-3 grid gap-3">
             {message.attachments.map((attachment) => (
               <div
-                className="overflow-hidden rounded-md border border-[#E4E4E4]"
+                className="overflow-hidden rounded-md border border-[var(--border)]"
                 key={attachment.id}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -67,7 +67,7 @@ export function MessageBubble({ index, message }: MessageBubbleProps) {
           {message.content}
         </p>
       </div>
-      <p className="mt-1 text-xs text-[#999999]">
+      <p className="mt-1 text-xs text-[var(--muted-foreground)]">
         {formatMessageTime(message.createdAt)}
       </p>
     </motion.article>

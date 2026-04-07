@@ -77,9 +77,9 @@ export function Composer({
 
   const box = (
     <div className="composer-glow relative z-0 rounded-xl">
-    <div className="rounded-xl border border-[#E4E4E4] bg-white shadow-sm">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
       <Textarea
-        className="min-h-[44px] resize-none border-none bg-transparent px-4 py-3 text-[14px] leading-relaxed text-[#111111] placeholder:text-[#999999] focus-visible:ring-0"
+        className="min-h-[44px] resize-none border-none bg-transparent px-4 py-3 text-[14px] leading-relaxed text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus-visible:ring-0"
         disabled={disabled || isSubmitting}
         onChange={(event) => onValueChange(event.target.value)}
         onKeyDown={(event) => {
@@ -94,10 +94,10 @@ export function Composer({
         value={value}
       />
 
-      <div className="flex items-center justify-between gap-2 border-t border-[#EEEEEE] px-3 py-2">
+      <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1">
           <Button
-            className="h-8 min-h-[44px] rounded px-3 text-xs text-[#666666] hover:bg-[#F8F8F8] hover:text-[#111111]"
+            className="h-8 min-h-[44px] rounded px-3 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"
             disabled={regenerateDisabled}
             onClick={onRegenerate}
             type="button"
@@ -118,7 +118,7 @@ export function Composer({
           />
 
           <button
-            className="flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center text-[#111111] transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 md:rounded-full md:bg-white md:shadow-sm md:hover:bg-[#f0f0f0]"
+            className="flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center text-[var(--foreground)] transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 md:rounded-full md:bg-[var(--card)] md:shadow-sm md:hover:bg-[var(--secondary)]"
             disabled={!canSend}
             onClick={() => void handleSubmit(value)}
             title={copy.composer.sendLabel}

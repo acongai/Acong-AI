@@ -76,8 +76,8 @@ export function ChatShell({ threadId }: ChatShellProps) {
   return (
     <>
       <div
-        className="h-full bg-[#F2F2F2]"
-        style={{ backgroundImage: "radial-gradient(circle, #00000026 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+        className="h-full bg-[var(--background)]"
+        style={{ backgroundImage: "radial-gradient(circle, var(--dot-color) 1px, transparent 1px)", backgroundSize: "24px 24px" }}
       >
       {hasMessages ? (
         <section className="flex h-full flex-col">

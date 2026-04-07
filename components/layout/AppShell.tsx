@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import dynamic from "next/dynamic"
 import { useEffect, useEffectEvent, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Moon, Sun } from "lucide-react"
 
 import { Sidebar } from "@/components/chat/Sidebar"
 import { MobileDrawer } from "@/components/layout/MobileDrawer"
@@ -12,6 +13,7 @@ import { PricingPopup } from "@/components/payments/PricingPopup"
 import { useAuth } from "@/hooks/useAuth"
 import { useThread } from "@/hooks/useThread"
 import { useLanguage } from "@/hooks/useLanguage"
+import { useTheme } from "@/hooks/useTheme"
 import { COPY } from "@/lib/copy"
 import { createClient } from "@/supabase/client"
 
@@ -40,6 +42,7 @@ export function AppShell({ children }: AppShellProps) {
   const searchParams = useSearchParams()
   const auth = useAuth()
   const { locale, setLocale } = useLanguage()
+  const { theme, toggleTheme } = useTheme()
 
   const PLAN_LABELS: Record<string, string> = {
     free: "Ga Modal",
@@ -162,10 +165,10 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="m-2 min-h-[calc(100vh-1rem)] overflow-hidden rounded-2xl bg-[#F2F2F2] text-[#111111]">
+    <div className="m-2 min-h-[calc(100vh-1rem)] overflow-hidden rounded-2xl bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)]">
       <Sidebar
         activeThreadId={activeThreadId}
-        className="fixed inset-y-0 left-0 z-30 hidden w-[260px] md:block"
+        className="fixed inset-y-0 left-0 z-30 hidden w-[260px] md:block border-r border-[var(--border)]"
         onDeleteThread={threadState.deleteThread}
         onOpenLogin={() => setLoginOpen(true)}
         planName={planName}
@@ -187,21 +190,31 @@ export function AppShell({ children }: AppShellProps) {
       </MobileDrawer>
 
       <div className="relative h-[calc(100vh-1rem)] overflow-hidden pb-14 md:pb-0 md:pl-[260px]">
-        {/* Language Toggle in Main Section */}
-        <div className="absolute right-6 top-5 z-20 flex gap-1.5 text-[10px] font-bold text-[#999999]">
-          <button 
-            onClick={() => setLocale("id")}
-            className={`transition-colors hover:text-[#111111] ${locale === "id" ? "text-[#111111] underline underline-offset-4" : ""}`}
+        {/* Language & Theme Toggles */}
+        <div className="absolute right-6 top-5 z-20 flex items-center gap-4">
+          <button
+            onClick={toggleTheme}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] transition-colors hover:bg-[var(--secondary)]"
+            title="Toggle theme"
           >
-            ID
+            {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
           </button>
-          <span className="opacity-30">/</span>
-          <button 
-            onClick={() => setLocale("en")}
-            className={`transition-colors hover:text-[#111111] ${locale === "en" ? "text-[#111111] underline underline-offset-4" : ""}`}
-          >
-            EN
-          </button>
+
+          <div className="flex gap-1.5 text-[10px] font-bold text-[var(--muted-foreground)]">
+            <button 
+              onClick={() => setLocale("id")}
+              className={`transition-colors hover:text-[var(--foreground)] ${locale === "id" ? "text-[var(--foreground)] underline underline-offset-4" : ""}`}
+            >
+              ID
+            </button>
+            <span className="opacity-30">/</span>
+            <button 
+              onClick={() => setLocale("en")}
+              className={`transition-colors hover:text-[var(--foreground)] ${locale === "en" ? "text-[var(--foreground)] underline underline-offset-4" : ""}`}
+            >
+              EN
+            </button>
+          </div>
         </div>
 
         <main className="h-full">{children}</main>
