@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { z } from "zod"
 
-import { orchestrateTextReply } from "@/lib/ai/orchestrator"
+import { orchestrateTextReply, routeGroupChat } from "@/lib/ai/orchestrator"
 import { debitCredits, InsufficientCreditsError, refundCredits } from "@/lib/billing/credits"
 import {
   completeAssistantMessage,
@@ -41,55 +41,54 @@ export async function POST(request: NextRequest) {
   const copy = locale === "en" ? COPY_EN : COPY
 
   if (!rateLimit.allowed) {
-    return NextResponse.json(
-      {
-        error: copy.api.sendRateLimit,
-      },
-      { status: 429 },
-    )
+    return NextResponse.json({ error: copy.api.sendRateLimit }, { status: 429 })
   }
 
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json(
-      {
-        error: copy.api.sendUnauthorized,
-      },
-      { status: 401 },
-    )
+    return NextResponse.json({ error: copy.api.sendUnauthorized }, { status: 401 })
   }
 
   const rawBody = await request.json().catch(() => null)
   const parsedBody = sendMessageSchema.safeParse(rawBody)
 
   if (!parsedBody.success) {
-    return NextResponse.json(
-      {
-        error: copy.api.sendInvalid,
-      },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: copy.api.sendInvalid }, { status: 400 })
   }
 
   const { attachmentIds, characterId, content, threadId } = parsedBody.data
 
-  const initialThread =
-    threadId !== undefined
-      ? await getThreadForUser(user.id, threadId)
-      : await createThread(user.id)
+  const initialThread = threadId !== undefined
+    ? await getThreadForUser(user.id, threadId)
+    : await createThread(user.id)
 
   if (!initialThread) {
-    return NextResponse.json(
-      {
-        error: copy.api.sendThreadMissing,
-      },
-      { status: 404 },
-    )
+    return NextResponse.json({ error: copy.api.sendThreadMissing }, { status: 404 })
   }
+
+  const isGroup = initialThread.type === 'group'
+  const metadata = (initialThread.metadata as any) || {}
+  const memberIds = metadata.memberIds || []
+  const kickedIds = metadata.kickedIds || []
+  const activeMembers = memberIds.filter((id: string) => !kickedIds.includes(id))
+
+  // Detection of @mention
+  let characterOrder: string[] = []
+  const mentionRegex = /@(\w+)/g
+  const mentions = Array.from(content.matchAll(mentionRegex)).map(match => match[1].toLowerCase())
+  const validMention = mentions.find(m => activeMembers.includes(m))
+
+  if (validMention) {
+    characterOrder = [validMention]
+  } else if (isGroup) {
+    characterOrder = await routeGroupChat({ userInput: content, activeMemberIds: activeMembers })
+  } else {
+    characterOrder = [characterId || 'acong']
+  }
+
+  const creditCost = characterOrder.length
 
   const userMessage = await createUserMessage({
     content,
@@ -105,133 +104,82 @@ export async function POST(request: NextRequest) {
   })
 
   await touchThread(initialThread.id, userMessage.created_at ?? undefined)
-  const thread =
-    (await maybeGenerateThreadTitleFromMessage(
-      user.id,
-      initialThread.id,
-      content,
-    )) ?? initialThread
-
-  let debitResult
+  const thread = (await maybeGenerateThreadTitleFromMessage(user.id, initialThread.id, content)) ?? initialThread
 
   try {
-    debitResult = await debitCredits(user.id, 1, {
-      note: "Charge for sent message",
+    await debitCredits(user.id, creditCost, {
+      note: `Charge for ${creditCost} characters`,
       referenceId: userMessage.id,
       referenceType: "message",
     })
   } catch (error) {
     if (error instanceof InsufficientCreditsError) {
-      const awaitingPaymentMessage = await createAssistantPlaceholder({
+      const p = await createAssistantPlaceholder({
         parentMessageId: userMessage.id,
         status: "awaiting_payment",
         threadId: thread.id,
         userId: user.id,
       })
-
-      return NextResponse.json(
-        {
-          error: copy.api.sendNoCredits,
-          messageId: awaitingPaymentMessage.id,
-          threadId: thread.id,
-        },
-        { status: 402 },
-      )
+      return NextResponse.json({ error: copy.api.sendNoCredits, messageId: p.id, threadId: thread.id }, { status: 402 })
     }
-
-    console.error("chat_send_debit_error", {
-      error,
-      thread_id: thread.id,
-      user_id: user.id,
-    })
-
-    return NextResponse.json(
-      {
-        error: copy.api.sendDebitFailed,
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: copy.api.sendDebitFailed }, { status: 500 })
   }
 
-  const assistantPlaceholder = await createAssistantPlaceholder({
-    parentMessageId: userMessage.id,
-    status: "generating",
-    threadId: thread.id,
-    userId: user.id,
-  })
-
-  try {
-    const historyRows = await getConversationContext(user.id, thread.id, 10)
-    const history = historyRows
-      .filter((message) => message.id !== userMessage.id)
-      .map((message) => ({
-        content: message.content_text ?? "",
-        role: message.role as "assistant" | "user",
-      }))
-
-    const orchestration = await orchestrateTextReply({
-      characterId,
-      history,
-      locale,
-      userInput: content,
-    })
-    const assistantMessage = await completeAssistantMessage({
-      content: orchestration.outputText,
-      messageId: assistantPlaceholder.id,
-      metadata: {
-        ai_finish_message: orchestration.meta.finishMessage,
-        ai_finish_reason: orchestration.meta.finishReason,
-        ai_is_truncated: orchestration.meta.isTruncated,
-        ai_request_id: orchestration.meta.requestId,
-        ai_response_id: orchestration.meta.responseId,
-        ai_usage_metadata: orchestration.meta.usageMetadata,
-        character_id: characterId,
-        roast_applied: orchestration.meta.roastApplied,
-        typo_score: orchestration.meta.typoScore,
-      },
-      userId: user.id,
-    })
-
-    await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
-
-    return NextResponse.json({
-      assistantMessage,
-      balance: debitResult.balance,
+  // Sequential Replies
+  const results = []
+  for (const charId of characterOrder) {
+    const placeholder = await createAssistantPlaceholder({
+      parentMessageId: userMessage.id,
+      status: "generating",
       threadId: thread.id,
-      threadTitle: thread.title,
-      userMessage,
-    })
-  } catch (error) {
-    console.error("chat_send_generation_error", {
-      error,
-      thread_id: thread.id,
-      user_id: user.id,
-    })
-
-    const failureMessage = copy.errorMessage
-
-    await failAssistantMessage({
-      content: failureMessage,
-      messageId: assistantPlaceholder.id,
-      metadata: {
-        stage: "send",
-      },
       userId: user.id,
     })
 
-    await refundCredits(user.id, 1, {
-      note: "Refund for failed generation",
-      referenceId: assistantPlaceholder.id,
-      referenceType: "refund",
-    })
+    try {
+      const historyRows = await getConversationContext(user.id, thread.id, 20)
+      const history = historyRows
+        .filter((message) => message.id !== placeholder.id)
+        .map((message) => ({
+          content: message.content_text ?? "",
+          role: message.role as "assistant" | "user",
+        }))
 
-    return NextResponse.json(
-      {
-        error: failureMessage,
-        messageId: assistantPlaceholder.id,
-        threadId: thread.id,
-      },
-      { status: 500 },
-    )
+      const orchestration = await orchestrateTextReply({
+        characterId: charId,
+        history,
+        locale,
+        userInput: content,
+        groupMemberIds: isGroup ? activeMembers : [],
+      })
+
+      const assistantMessage = await completeAssistantMessage({
+        content: orchestration.outputText,
+        messageId: placeholder.id,
+        metadata: {
+          character_id: charId,
+          group_turn: true
+        },
+        userId: user.id,
+      })
+
+      results.push(assistantMessage)
+      await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
+    } catch (err) {
+      console.error("Sequential reply error", err)
+      await failAssistantMessage({
+        content: copy.errorMessage,
+        messageId: placeholder.id,
+        metadata: { stage: "sequential" },
+        userId: user.id,
+      })
+    }
   }
+
+  return NextResponse.json({
+    assistantMessages: results,
+    threadId: thread.id,
+    threadTitle: thread.title,
+    userMessage,
+  })
 }
+

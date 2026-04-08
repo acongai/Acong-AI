@@ -159,6 +159,8 @@ export interface Database {
           updated_at: string | null
           last_message_at: string | null
           status: ChatThreadStatus | null
+          type: string | null
+          metadata: Json | null
         }
         Insert: {
           id?: string
@@ -168,6 +170,8 @@ export interface Database {
           updated_at?: string | null
           last_message_at?: string | null
           status?: ChatThreadStatus | null
+          type?: string | null
+          metadata?: Json | null
         }
         Update: {
           id?: string
@@ -177,6 +181,8 @@ export interface Database {
           updated_at?: string | null
           last_message_at?: string | null
           status?: ChatThreadStatus | null
+          type?: string | null
+          metadata?: Json | null
         }
         Relationships: []
       }

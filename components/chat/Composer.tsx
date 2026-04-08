@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from "react"
 import { RotateCcw, SendHorizontal } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -36,6 +37,8 @@ export function Composer({
   const canSend = value.trim().length > 0 && !disabled && !isSubmitting
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [pricingOpen, setPricingOpen] = useState(false)
+  const [showMentions, setShowMentions] = useState(false)
+  const [mentionQuery, setMentionQuery] = useState("")
   const auth = useAuth()
   const credits = useCredits()
   const { copy } = useLanguage()
@@ -83,7 +86,19 @@ export function Composer({
       <Textarea
         className="min-h-[44px] resize-none border-none bg-transparent px-4 py-3 text-[14px] leading-relaxed text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus-visible:ring-0"
         disabled={disabled || isSubmitting}
-        onChange={(event) => onValueChange(event.target.value)}
+        onChange={(event) => {
+          const val = event.target.value
+          onValueChange(val)
+          
+          // Basic mention detection for autocomplete
+          const lastWord = val.split(/\s/).pop() || ""
+          if (lastWord.startsWith("@")) {
+            setMentionQuery(lastWord.slice(1).toLowerCase())
+            setShowMentions(true)
+          } else {
+            setShowMentions(false)
+          }
+        }}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault()
@@ -95,6 +110,39 @@ export function Composer({
         rows={1}
         value={value}
       />
+
+      {/* Mention Suggestions Popup */}
+      <AnimatePresence>
+        {showMentions && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-full left-4 mb-2 w-48 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xl"
+          >
+            {characters
+              .filter(c => c.name.toLowerCase().includes(mentionQuery))
+              .map(char => (
+                <button
+                  key={char.id}
+                  onClick={() => {
+                    const parts = value.split(/\s/)
+                    parts.pop() // remove the @query
+                    const newVal = [...parts, `@${char.name} `].join(" ")
+                    onValueChange(newVal)
+                    setShowMentions(false)
+                    textareaRef.current?.focus()
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--secondary)]"
+                >
+                  <img src={char.avatarSrc} className="h-5 w-5 rounded-full object-cover" alt="" />
+                  {char.name}
+                </button>
+              ))
+            }
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1">

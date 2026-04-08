@@ -105,6 +105,8 @@ function toAppThreads(
     last_message_at: string | null
     title: string | null
     updated_at: string | null
+    type?: any
+    metadata?: any
   }>,
   previews: ReturnType<typeof toThreadPreview>,
 ): AppThread[] {
@@ -117,6 +119,8 @@ function toAppThreads(
       thread.updated_at ??
       new Date("2026-03-17T00:00:00.000Z").toISOString(),
     messageCount: previews.countByThread.get(thread.id) ?? 0,
+    type: thread.type as "individual" | "group",
+    metadata: thread.metadata as any,
   }))
 }
 
@@ -145,7 +149,7 @@ async function fetchThreadState({
 
   const { data: threadRows, error: threadError } = await supabase
     .from("chat_threads")
-    .select("id,title,last_message_at,updated_at")
+    .select("id,title,last_message_at,updated_at,type,metadata")
     .order("last_message_at", { ascending: false })
     .order("updated_at", { ascending: false })
 
@@ -159,6 +163,8 @@ async function fetchThreadState({
       last_message_at: string | null
       title: string | null
       updated_at: string | null
+      type: string | null
+      metadata: any
     }>
 
   const threadIds = normalizedThreads.map((thread) => thread.id)
@@ -523,6 +529,28 @@ export function useThread({
     refresh,
     regenerateLastReply,
     sendMessage,
+    startGroupChat: async (memberIds: string[]) => {
+      setIsLoading(true)
+      try {
+        const { data: newThread, error: threadError } = await supabase
+          .from("chat_threads")
+          .insert({
+            user_id: (await supabase.auth.getUser()).data.user?.id,
+            type: "group",
+            metadata: { memberIds, kickedIds: [] },
+            title: `Grup Chat (${memberIds.length} orang)`
+          })
+          .select()
+          .single()
+
+        if (threadError) throw threadError
+        router.push(`/chat/${newThread.id}`)
+      } catch (err) {
+        toast.error("Gagal bikin grup, coba lagi ya.")
+      } finally {
+        setIsLoading(false)
+      }
+    },
     threadTitle,
     threads,
   }

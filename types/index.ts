@@ -24,4 +24,9 @@ export interface AppThread {
   preview: string
   updatedAt: string
   messageCount: number
+  type?: "individual" | "group"
+  metadata?: {
+    memberIds?: string[]
+    kickedIds?: string[]
+  }
 }

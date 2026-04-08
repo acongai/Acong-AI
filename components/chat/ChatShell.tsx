@@ -10,6 +10,11 @@ import { useLanguage } from "@/hooks/useLanguage"
 import { Composer } from "./Composer"
 import { EmptyStateMascot } from "./EmptyStateMascot"
 import { MessageList } from "./MessageList"
+import { GroupMemberPicker } from "./GroupMemberPicker"
+import { GroupHeader } from "./GroupHeader"
+import { AnimatePresence } from "framer-motion"
+import { Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface ChatShellProps {
   threadId?: string
@@ -18,6 +23,7 @@ interface ChatShellProps {
 export function ChatShell({ threadId }: ChatShellProps) {
   const { copy } = useLanguage()
   const [draft, setDraft] = useState("")
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
   const thread = useThread({
     includeMessages: true,
     threadId,
@@ -33,6 +39,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
   const refresh = thread.refresh
   const regenerateLastReply = thread.regenerateLastReply
   const sendMessage = thread.sendMessage
+  const startGroupChat = thread.startGroupChat
   const failureMessage = copy.errorMessage
 
   const hasMessages = messages.length > 0
@@ -91,6 +98,15 @@ export function ChatShell({ threadId }: ChatShellProps) {
             </div>
           ) : null}
 
+          {thread.type === "group" && threadId && (
+            <GroupHeader
+              threadId={threadId}
+              memberIds={thread.metadata?.memberIds || []}
+              kickedIds={thread.metadata?.kickedIds || []}
+              refresh={refresh}
+            />
+          )}
+
           <MessageList
             emptySubtitle={copy.emptyStateSubtitle}
             emptyTitle={copy.emptyStateTitle}
@@ -122,7 +138,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
 
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="mb-10"
+            className="mb-10 text-center"
             initial={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.25 }}
           >
@@ -131,7 +147,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
 
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-2xl"
+            className="flex w-full max-w-2xl flex-col items-center gap-6"
             initial={{ opacity: 0, y: 12 }}
             transition={{ delay: 0.12, duration: 0.25 }}
           >
@@ -145,10 +161,31 @@ export function ChatShell({ threadId }: ChatShellProps) {
               value={draft}
               variant="centered"
             />
+
+            <Button
+              variant="outline"
+              onClick={() => setIsPickerOpen(true)}
+              className="h-10 rounded-full border-[var(--border)] bg-[var(--card)] px-6 text-sm text-[var(--foreground)] hover:bg-[var(--secondary)]"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              👥 Group Chat
+            </Button>
           </motion.div>
         </section>
       )}
       </div>
+
+      <AnimatePresence>
+        {isPickerOpen && (
+          <GroupMemberPicker 
+            onClose={() => setIsPickerOpen(false)}
+            onConfirm={(ids) => {
+              setIsPickerOpen(false)
+              void startGroupChat(ids)
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <PaywallModal
         onOpenChange={(open) => {

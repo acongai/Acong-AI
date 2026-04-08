@@ -19,6 +19,7 @@ interface SidebarProps {
   onOpenLogin?: () => void
   threads: AppThread[]
   userName?: string | null
+  userAvatarUrl?: string | null
   planName?: string
 }
 
@@ -30,6 +31,7 @@ export function Sidebar({
   onOpenLogin,
   threads,
   userName,
+  userAvatarUrl,
   planName = "Ga Modal",
 }: SidebarProps) {
   const router = useRouter()
@@ -120,8 +122,12 @@ export function Sidebar({
                 type="button"
               >
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--sidebar-accent)]">
-                    <User className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--sidebar-accent)]">
+                    {userAvatarUrl ? (
+                      <img alt={userName || "User"} className="h-full w-full object-cover" src={userAvatarUrl} />
+                    ) : (
+                      <User className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-medium text-[var(--sidebar-foreground)]">

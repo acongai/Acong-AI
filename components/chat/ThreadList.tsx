@@ -5,6 +5,8 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { Trash2 } from "lucide-react"
 
+import { useCharacter } from "@/hooks/useCharacter"
+
 import {
   Dialog,
   DialogContent,
@@ -56,6 +58,7 @@ export function ThreadList({
 }: ThreadListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const { characters } = useCharacter()
 
   async function handleConfirmDelete() {
     if (!pendingDeleteId || !onDeleteThread) return
@@ -82,6 +85,8 @@ export function ThreadList({
       <div className="space-y-2">
         {threads.map((thread, index) => {
           const active = activeThreadId === thread.id
+          const isGroup = thread.type === "group"
+          const memberIds = thread.metadata?.memberIds || []
 
           return (
             <motion.div
@@ -101,7 +106,31 @@ export function ThreadList({
                 href={`/chat/${thread.id}`}
                 onClick={onNavigate}
               >
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="relative h-8 w-8 shrink-0">
+                    {isGroup ? (
+                      <div className="flex -space-x-4">
+                        {memberIds.slice(0, 3).map((id, i) => {
+                          const char = characters.find(c => c.id === id)
+                          return (
+                            <div 
+                              key={id}
+                              className="h-7 w-7 overflow-hidden rounded-full border-2 border-[var(--sidebar)] bg-[var(--secondary)]"
+                              style={{ zIndex: 10 - i }}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={char?.avatarSrc} className="h-full w-full object-cover" alt="" />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--sidebar-accent)] text-[var(--muted-foreground)] opacity-70">
+                        <span className="text-sm">💬</span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-medium text-[var(--sidebar-foreground)]">
                       {thread.title}

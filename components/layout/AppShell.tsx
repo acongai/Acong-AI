@@ -174,6 +174,7 @@ export function AppShell({ children }: AppShellProps) {
         planName={planName}
         threads={threadState.threads}
         userName={auth.user?.email ?? null}
+        userAvatarUrl={(auth.user?.user_metadata?.avatar_url as string) ?? null}
       />
 
       <MobileDrawer onOpenChange={setDrawerOpen} open={drawerOpen}>
@@ -186,6 +187,7 @@ export function AppShell({ children }: AppShellProps) {
           planName={planName}
           threads={threadState.threads}
           userName={auth.user?.email ?? null}
+          userAvatarUrl={(auth.user?.user_metadata?.avatar_url as string) ?? null}
         />
       </MobileDrawer>
 

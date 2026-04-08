@@ -43,6 +43,7 @@ export async function orchestrateTextReply({
   userInput: string
   locale?: "id" | "en"
   characterId?: string
+  groupMemberIds?: string[]
 }): Promise<OrchestratorResult> {
   const typoScore = computeTypoScore(userInput)
   const roastApplied = shouldRoastTypo(typoScore)
@@ -54,9 +55,14 @@ export async function orchestrateTextReply({
     basePrompt = locale === "en" ? BABEH_SYSTEM_PROMPT_EN : BABEH_SYSTEM_PROMPT
   }
 
-  const systemPrompt = roastApplied
+  let systemPrompt = roastApplied
     ? `${basePrompt}\n\n${locale === "en" ? "Additional instruction:\n- " : "Instruksi tambahan:\n- "}${getTypoRoastInstruction(locale)}`
     : basePrompt
+
+  if (groupMemberIds && groupMemberIds.length > 0) {
+    const memberNames = groupMemberIds.map(id => id === 'acong' ? 'Acong' : id === 'mpok' ? 'Mpok' : 'Babeh').join(', ')
+    systemPrompt += `\n\nKamu lagi di grup chat bareng: ${memberNames}. Jawab sesuai kepribadian lu dan konteks grup.`
+  }
 
   const conversation: OrchestratorMessage[] = [
     ...history.slice(-10),
@@ -80,5 +86,28 @@ export async function orchestrateTextReply({
     },
     outputText: response.text,
     outputType: "text",
+  }
+}
+
+export async function routeGroupChat({
+  userInput,
+  activeMemberIds,
+}: {
+  userInput: string
+  activeMemberIds: string[]
+}): Promise<string[]> {
+  const systemPrompt = `Given this user message, order these characters by who would most naturally respond first based on their personality. Return only a JSON array of character ids, nothing else. Available ids: ${activeMemberIds.join(", ")}`
+  
+  const response = await generateTextResponse({
+    conversation: [{ role: "user", content: userInput }],
+    systemPrompt,
+  })
+
+  try {
+    const cleaned = response.text.replace(/```json|```/g, "").trim()
+    const order = JSON.parse(cleaned) as string[]
+    return order.filter(id => activeMemberIds.includes(id))
+  } catch (e) {
+    return activeMemberIds
   }
 }
