@@ -42,7 +42,7 @@ export function Composer({
   const auth = useAuth()
   const credits = useCredits()
   const { copy } = useLanguage()
-  const { activeCharacter } = useCharacter()
+  const { activeCharacter, characters } = useCharacter()
   const handleCreditDeducted = useEffectEvent(() => {
     credits.refresh()
   })
