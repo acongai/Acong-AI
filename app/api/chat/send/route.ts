@@ -27,6 +27,7 @@ const sendMessageSchema = z.object({
   characterId: z.string().optional(),
   threadId: z.string().uuid().optional(),
   content: z.string().trim().min(1).max(4000),
+  localTime: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: copy.api.sendInvalid }, { status: 400 })
   }
 
-  const { attachmentIds, characterId, content, threadId } = parsedBody.data
+  const { attachmentIds, characterId, content, threadId, localTime } = parsedBody.data
 
   const initialThread = threadId !== undefined
     ? await getThreadForUser(user.id, threadId)
@@ -138,8 +139,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: copy.api.sendDebitFailed }, { status: 500 })
   }
 
-  // Sequential Replies
+  // Sequential Replies — accumulate round context for Enhancement 2
   const results = []
+  const roundContext: { characterId: string; text: string }[] = []
+
   for (const charId of characterOrder) {
     const placeholder = await createAssistantPlaceholder({
       parentMessageId: userMessage.id,
@@ -164,8 +167,11 @@ export async function POST(request: NextRequest) {
         locale,
         userInput: content,
         groupMemberIds: isGroup ? activeMembers : [],
+        kickedIds: isGroup ? kickedIds : [],
         userName,
         userGender,
+        localTime,
+        roundContext: isGroup ? [...roundContext] : [],
       })
 
       const assistantMessage = await completeAssistantMessage({
@@ -173,10 +179,15 @@ export async function POST(request: NextRequest) {
         messageId: placeholder.id,
         metadata: {
           character_id: charId,
-          group_turn: true
+          group_turn: isGroup,
         },
         userId: user.id,
       })
+
+      // Add this character's response to round context for next characters
+      if (isGroup) {
+        roundContext.push({ characterId: charId, text: orchestration.outputText })
+      }
 
       results.push(assistantMessage)
       await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
@@ -191,22 +202,23 @@ export async function POST(request: NextRequest) {
         errorStack: errStack,
         timestamp: new Date().toISOString(),
       })
-      // Delete placeholder and create system error message instead of character error bubble
-      const admin = await createClient()
-      await admin.from("chat_messages").delete().eq("id", placeholder.id)
-      await admin.from("chat_messages").insert({
+      // Delete placeholder and insert system error message — DO NOT block other characters
+      await supabase.from("chat_messages").delete().eq("id", placeholder.id)
+      await supabase.from("chat_messages").insert({
         thread_id: thread.id,
         user_id: user.id,
         role: "system",
-        content_text: copy.errorMessage,
+        content_text: `[${charId}] ${copy.errorMessage}`,
         content_type: "system",
         status: "completed"
       })
+      // Refund 1 credit for this failed character
       await refundCredits(user.id, 1, {
         note: `Refund for failed ${charId} reply: ${errMsg}`,
         referenceId: placeholder.id,
         referenceType: "message",
       })
+      // continue to next character in loop
     }
   }
 
@@ -217,5 +229,3 @@ export async function POST(request: NextRequest) {
     userMessage,
   })
 }
-
-

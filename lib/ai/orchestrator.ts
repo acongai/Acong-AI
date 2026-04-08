@@ -39,16 +39,22 @@ export async function orchestrateTextReply({
   locale = "id",
   characterId = "acong",
   groupMemberIds = [],
+  kickedIds = [],
   userName,
   userGender,
+  localTime,
+  roundContext = [],
 }: {
   history: OrchestratorMessage[]
   userInput: string
   locale?: "id" | "en"
   characterId?: string
   groupMemberIds?: string[]
+  kickedIds?: string[]
   userName?: string
   userGender?: "male" | "female"
+  localTime?: string
+  roundContext?: { characterId: string; text: string }[]
 }): Promise<OrchestratorResult> {
   const typoScore = computeTypoScore(userInput)
   const roastApplied = shouldRoastTypo(typoScore)
@@ -64,6 +70,11 @@ export async function orchestrateTextReply({
     ? `${basePrompt}\n\n${locale === "en" ? "Additional instruction:\n- " : "Instruksi tambahan:\n- "}${getTypoRoastInstruction(locale)}`
     : basePrompt
 
+  // Inject local time
+  if (localTime) {
+    systemPrompt += `\n\nSekarang jam ${localTime} waktu lokal user. Kamu bisa bereaksi ke waktu ini secara natural kalau relevan — tapi jangan dipaksain.`
+  }
+
   // Personalized rules based on persona
   if (characterId === 'acong') {
     systemPrompt += `\n\nHARD RULE: Jangan pernah manggil user pake nama. Pake 'lo/gw' aja. Titik.`
@@ -73,8 +84,28 @@ export async function orchestrateTextReply({
   }
 
   if (groupMemberIds && groupMemberIds.length > 0) {
-    const memberNames = groupMemberIds.map(id => id === 'acong' ? 'Acong' : id === 'mpok' ? 'Mpok' : 'Babeh').join(', ')
-    systemPrompt += `\n\nKamu lagi di grup chat bareng ${memberNames}. User ini namanya ${userName || 'User'}, gendernya ${userGender || 'unknown'}. Kalau ada karakter yang udah dikick dari grup, kamu tau dan kagak perlu nunggu atau nyebut-nyebut dia lagi. Jawab ke user, bukan ke sesama karakter — boleh nyinggung karakter lain tapi konteksnya tetap ke user. Jawab sekali aja, jangan balas lagi setelah giliranmu selesai.`
+    // Enhancement 3: members aware of current group state
+    const activeNames = groupMemberIds.map(id => id === 'acong' ? 'Acong' : id === 'mpok' ? 'Mpok' : 'Babeh').join(', ')
+    const kickedNames = kickedIds.length > 0
+      ? kickedIds.map(id => id === 'acong' ? 'Acong' : id === 'mpok' ? 'Mpok' : 'Babeh').join(', ')
+      : null
+
+    systemPrompt += `\n\nAnggota grup yang aktif saat ini: ${activeNames}. User ini namanya ${userName || 'User'}, gendernya ${userGender || 'unknown'}.`
+    if (kickedNames) {
+      systemPrompt += ` ${kickedNames} udah dikeluarin dari grup — kamu tau ini dan nggak perlu nunggu atau nyebut-nyebut mereka lagi.`
+    }
+    systemPrompt += ` Jawab ke user, bukan ngobrol langsung ke sesama karakter. Jawab sekali aja, jangan balas lagi setelah giliranmu selesai.`
+
+    // Enhancement 2: inject previous characters' responses this round
+    if (roundContext.length > 0) {
+      const roundSummary = roundContext
+        .map(r => {
+          const name = r.characterId === 'acong' ? 'Acong' : r.characterId === 'mpok' ? 'Mpok' : 'Babeh'
+          return `${name}: "${r.text}"`
+        })
+        .join('\n')
+      systemPrompt += `\n\nIni grup chat. Di ronde ini, karakter lain udah jawab duluan:\n${roundSummary}\n\nKamu bisa acknowledge, setuju, atau bereaksi ke jawaban mereka secara natural — tapi jangan copy atau ulangi poin yang sama. Kalau udah dijawab lengkap, cukup nambahin, nyahut, atau komentar singkat. Tetap jaga karakter dan gaya lo sendiri.`
+    }
   }
 
   if (locale === "en") {

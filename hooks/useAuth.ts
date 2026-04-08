@@ -82,6 +82,15 @@ export function useAuth() {
     return () => window.removeEventListener("acong:credits:topup", handler)
   }, [])
 
+  // Re-fetch profile name after Sidebar rename (dispatched by Sidebar component)
+  useEffect(() => {
+    const handler = () => {
+      if (userRef.current) void fetchPlan(userRef.current.id)
+    }
+    window.addEventListener("acong:profile:updated", handler)
+    return () => window.removeEventListener("acong:profile:updated", handler)
+  }, [])
+
   useEffect(() => {
     const refreshFromForeground = () => {
       if (document.visibilityState !== "visible" || !userRef.current) {

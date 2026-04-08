@@ -139,6 +139,13 @@ export function AppShell({ children }: AppShellProps) {
     return () => window.removeEventListener("acong:login:open", handler)
   }, [])
 
+  // Listen for group rename/kick events to instantly refresh sidebar thread list
+  useEffect(() => {
+    const handler = () => refreshThreads()
+    window.addEventListener("acong:threads:refresh", handler)
+    return () => window.removeEventListener("acong:threads:refresh", handler)
+  }, [])
+
   useEffect(() => {
     if (auth.isLoading) {
       return

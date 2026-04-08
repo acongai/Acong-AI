@@ -41,6 +41,7 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
     if (error) toast.error(copy.groupHeader.kickError)
     else {
       toast.success(`${id.toUpperCase()} ${copy.groupHeader.kickSuccess}`)
+      window.dispatchEvent(new CustomEvent("acong:threads:refresh"))
       await refresh()
     }
   }
@@ -55,6 +56,7 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
     if (error) toast.error(copy.groupHeader.reAddError)
     else {
       toast.success(`${id.toUpperCase()} ${copy.groupHeader.reAddSuccess}`)
+      window.dispatchEvent(new CustomEvent("acong:threads:refresh"))
       await refresh()
     }
   }
@@ -73,6 +75,7 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
     if (error) {
       toast.error("Failed to rename group")
     } else {
+      window.dispatchEvent(new CustomEvent("acong:threads:refresh"))
       await refresh()
       setIsEditing(false)
     }

@@ -76,7 +76,7 @@ export function Sidebar({
     if (error) {
       toast.error("Failed to rename profile")
     } else {
-      router.refresh()
+      window.dispatchEvent(new CustomEvent("acong:profile:updated"))
       setIsRenaming(false)
     }
   }
