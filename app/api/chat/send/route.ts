@@ -74,14 +74,15 @@ export async function POST(request: NextRequest) {
   const kickedIds = metadata.kickedIds || []
   const activeMembers = memberIds.filter((id: string) => !kickedIds.includes(id))
 
-  // Detection of @mention
   let characterOrder: string[] = []
   const mentionRegex = /@(\w+)/g
   const mentions = Array.from(content.matchAll(mentionRegex)).map(match => match[1].toLowerCase())
-  const validMention = mentions.find(m => activeMembers.includes(m))
-
-  if (validMention) {
-    characterOrder = [validMention]
+  
+  // Find all characters that are mentioned AND active in this thread
+  const mentionedActive = mentions.filter(m => activeMembers.includes(m))
+  
+  if (mentionedActive.length > 0) {
+    characterOrder = Array.from(new Set(mentionedActive))
   } else if (isGroup) {
     characterOrder = await routeGroupChat({ userInput: content, activeMemberIds: activeMembers })
   } else {
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
 
   try {
     await debitCredits(user.id, creditCost, {
-      note: `Charge for ${creditCost} characters`,
+      note: `Reply from ${characterOrder.join(", ")}`,
       referenceId: userMessage.id,
       referenceType: "message",
     })

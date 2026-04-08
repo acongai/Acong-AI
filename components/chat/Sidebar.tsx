@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { LogOut, MessageSquarePlus, User } from "lucide-react"
+import { toast } from "sonner"
 import { usePathname, useRouter } from "next/navigation"
 
 import { ThreadList } from "@/components/chat/ThreadList"
@@ -39,6 +40,8 @@ export function Sidebar({
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const { copy } = useLanguage()
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [newName, setNewName] = useState(userName || "")
 
   function handleNewThread() {
     onNavigate?.()
@@ -55,10 +58,34 @@ export function Sidebar({
     router.push("/")
   }
 
+  async function handleRenameProfile() {
+    if (!newName.trim() || newName === userName) {
+      setIsRenaming(false)
+      return
+    }
+
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: newName.trim() })
+      .eq("id", user.id)
+
+    if (error) {
+      toast.error("Failed to rename profile")
+    } else {
+      router.refresh()
+      setIsRenaming(false)
+    }
+  }
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setAccountMenuOpen(false)
+        setIsRenaming(false)
       }
     }
 
@@ -93,9 +120,9 @@ export function Sidebar({
 
         <ScrollArea className="mt-6 min-h-0 flex-1 overflow-x-hidden pr-1">
           <ThreadList
-            activeThreadId={activeThreadId}
-            onDeleteThread={onDeleteThread}
-            onNavigate={onNavigate}
+            activeThreadId={activeThreadId || undefined}
+            onDeleteThread={onDeleteThread || (async () => {})}
+            onNavigate={onNavigate || (() => {})}
             threads={threads}
           />
         </ScrollArea>
@@ -106,46 +133,90 @@ export function Sidebar({
               {accountMenuOpen && (
                 <div className="absolute bottom-full left-0 right-0 mb-1 overflow-hidden rounded-lg border border-[var(--sidebar-border)] bg-[var(--sidebar)] shadow-md">
                   <button
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-[var(--sidebar-foreground)] transition-colors hover:bg-[var(--sidebar-accent)]"
+                    onClick={() => {
+                      setIsRenaming(true)
+                      setNewName(userName || "")
+                    }}
+                    type="button"
+                  >
+                    <User className="h-4 w-4" />
+                    {copy.sidebar.renameProfile}
+                  </button>
+                  <button
                     className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-[#E5484D] transition-colors hover:bg-[var(--sidebar-accent)]"
                     onClick={handleSignOut}
                     type="button"
                   >
                     <LogOut className="h-4 w-4" />
-                    Sign out
+                    {copy.sidebar.signOut}
                   </button>
                 </div>
               )}
 
-              <button
-                className="w-full rounded-lg border border-[var(--sidebar-border)] p-3 text-left transition-colors hover:bg-[var(--sidebar-accent)]"
-                onClick={() => setAccountMenuOpen((prev) => !prev)}
-                type="button"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--sidebar-accent)]">
-                    {userAvatarUrl ? (
-                      <img alt={userName || "User"} className="h-full w-full object-cover" src={userAvatarUrl} />
-                    ) : (
-                      <User className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
-                    )}
+              <div className="w-full rounded-lg border border-[var(--sidebar-border)] p-3 text-left transition-colors hover:bg-[var(--sidebar-accent)]">
+                {isRenaming ? (
+                  <div className="flex flex-col gap-2">
+                    <input
+                      autoFocus
+                      className="h-7 w-full rounded border border-[var(--border)] bg-[var(--background)] px-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                      onChange={(e) => setNewName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRenameProfile()
+                        if (e.key === "Escape") setIsRenaming(false)
+                      }}
+                      value={newName}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        className="flex-1 rounded bg-[var(--primary)] py-1 text-[10px] font-bold text-[var(--primary-foreground)]"
+                        onClick={handleRenameProfile}
+                      >
+                        Save
+                      </button>
+                      <button
+                        className="flex-1 rounded bg-[var(--secondary)] py-1 text-[10px] font-bold text-[var(--foreground)]"
+                        onClick={() => setIsRenaming(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium text-[var(--sidebar-foreground)]">
-                      {userName}
-                    </p>
-                    <p className="text-[11px] text-[var(--muted-foreground)]">{planName}</p>
-                  </div>
-                  <svg
-                    className={`h-3.5 w-3.5 shrink-0 text-[var(--muted-foreground)] transition-transform ${accountMenuOpen ? "rotate-180" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    viewBox="0 0 24 24"
+                ) : (
+                  <button
+                    className="w-full"
+                    onClick={() => setAccountMenuOpen((prev) => !prev)}
+                    type="button"
                   >
-                    <path d="M18 15l-6-6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </button>
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--sidebar-accent)]">
+                        {userAvatarUrl ? (
+                          <img alt={userName || "User"} className="h-full w-full object-cover" src={userAvatarUrl} />
+                        ) : (
+                          <User className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-[var(--sidebar-foreground)]">
+                          {userName}
+                        </p>
+                        <p className="text-[11px] text-[var(--muted-foreground)]">
+                          {planName === "Ga Modal" ? copy.sidebar.planFree : planName}
+                        </p>
+                      </div>
+                      <svg
+                        className={`h-3.5 w-3.5 shrink-0 text-[var(--muted-foreground)] transition-transform ${accountMenuOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M18 15l-6-6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </button>
+                )}
+              </div>
             </>
           ) : (
             <button

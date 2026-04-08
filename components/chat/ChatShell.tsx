@@ -101,6 +101,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
           {thread.type === "group" && threadId && (
             <GroupHeader
               threadId={threadId}
+              title={thread.threadTitle || ""}
               memberIds={thread.metadata?.memberIds || []}
               kickedIds={thread.metadata?.kickedIds || []}
               refresh={refresh}
@@ -121,6 +122,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
             onSubmit={handleSubmit}
             onValueChange={setDraft}
             regenerateDisabled={messages.length === 0 || !threadId}
+            kickedIds={thread.metadata?.kickedIds || []}
             value={draft}
           />
         </section>
@@ -158,6 +160,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
               onSubmit={handleSubmit}
               onValueChange={setDraft}
               regenerateDisabled={true}
+              kickedIds={thread.metadata?.kickedIds || []}
               value={draft}
               variant="centered"
             />

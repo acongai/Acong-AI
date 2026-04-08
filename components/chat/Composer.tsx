@@ -22,6 +22,7 @@ interface ComposerProps {
   regenerateDisabled?: boolean
   value: string
   variant?: "default" | "centered"
+  kickedIds?: string[]
 }
 
 export function Composer({
@@ -33,6 +34,7 @@ export function Composer({
   regenerateDisabled = false,
   value,
   variant = "default",
+  kickedIds = [],
 }: ComposerProps) {
   const canSend = value.trim().length > 0 && !disabled && !isSubmitting
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -42,7 +44,7 @@ export function Composer({
   const auth = useAuth()
   const credits = useCredits()
   const { copy } = useLanguage()
-  const { activeCharacter, characters } = useCharacter()
+  const { characters } = useCharacter()
   const handleCreditDeducted = useEffectEvent(() => {
     credits.refresh()
   })
@@ -105,7 +107,7 @@ export function Composer({
             void handleSubmit(value)
           }
         }}
-        placeholder={activeCharacter.placeholderText}
+        placeholder={copy.composer.placeholder}
         ref={textareaRef}
         rows={1}
         value={value}
@@ -121,6 +123,7 @@ export function Composer({
             className="absolute bottom-full left-4 mb-2 w-48 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xl"
           >
             {characters
+              .filter(c => !kickedIds.includes(c.id))
               .filter(c => c.name.toLowerCase().includes(mentionQuery))
               .map(char => (
                 <button
@@ -154,7 +157,7 @@ export function Composer({
             variant="ghost"
           >
             <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-            {copy.regenerateLabel}
+            {copy.composer.regenerateLabel}
           </Button>
         </div>
 

@@ -6,6 +6,7 @@ import { createClient } from "@/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import { useLanguage } from "@/hooks/useLanguage"
 
 interface OnboardingModalProps {
   userId: string
@@ -17,6 +18,8 @@ export function OnboardingModal({ userId, onComplete }: OnboardingModalProps) {
   const [gender, setGender] = useState<"male" | "female" | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const supabase = createClient()
+
+  const { copy } = useLanguage()
 
   const isValid = fullName.trim().length >= 2 && gender !== null
 
@@ -36,11 +39,11 @@ export function OnboardingModal({ userId, onComplete }: OnboardingModalProps) {
 
       if (error) throw error
       
-      toast.success("Siap! Selamat datang di Acong AI.")
+      toast.success(copy.onboarding.success)
       onComplete()
     } catch (err) {
       console.error("Onboarding error:", err)
-      toast.error("Ada masalah pas nyimpen data lu. Coba lagi ya.")
+      toast.error(copy.onboarding.error)
     } finally {
       setIsSubmitting(false)
     }
@@ -54,20 +57,20 @@ export function OnboardingModal({ userId, onComplete }: OnboardingModalProps) {
         className="w-full max-w-md overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-2xl"
       >
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">Kenalan Dulu Dong!</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">{copy.onboarding.title}</h2>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-            Biar Acong, Mpok, ama Babeh manggilnya enak. Tenang, data lu aman.
+            {copy.onboarding.subtitle}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] opacity-70">
-              Nama Lengkap
+              {copy.onboarding.nameLabel}
             </label>
             <Input
               autoFocus
-              placeholder="Masukkan namamu..."
+              placeholder={copy.onboarding.namePlaceholder}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="h-12 border-[var(--border)] bg-[var(--secondary)]/30 px-4 text-base focus:ring-2 focus:ring-[var(--primary)]"
@@ -76,7 +79,7 @@ export function OnboardingModal({ userId, onComplete }: OnboardingModalProps) {
 
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] opacity-70">
-              Gender
+              {copy.onboarding.genderLabel}
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -84,22 +87,22 @@ export function OnboardingModal({ userId, onComplete }: OnboardingModalProps) {
                 onClick={() => setGender("male")}
                 className={`flex h-12 items-center justify-center rounded-xl border px-4 transition-all ${
                   gender === "male"
-                    ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-md"
+                    ? "border-white bg-white text-black shadow-md"
                     : "border-[var(--border)] bg-[var(--secondary)]/30 text-[var(--foreground)] hover:bg-[var(--secondary)]/50"
                 }`}
               >
-                Laki-laki
+                {copy.onboarding.genderMale}
               </button>
               <button
                 type="button"
                 onClick={() => setGender("female")}
                 className={`flex h-12 items-center justify-center rounded-xl border px-4 transition-all ${
                   gender === "female"
-                    ? "border-[var(--primary)] bg-[var(--primary)] text-white shadow-md"
+                    ? "border-white bg-white text-black shadow-md"
                     : "border-[var(--border)] bg-[var(--secondary)]/30 text-[var(--foreground)] hover:bg-[var(--secondary)]/50"
                 }`}
               >
-                Perempuan
+                {copy.onboarding.genderFemale}
               </button>
             </div>
           </div>
@@ -109,7 +112,7 @@ export function OnboardingModal({ userId, onComplete }: OnboardingModalProps) {
             disabled={!isValid || isSubmitting}
             className="h-12 w-full rounded-xl text-base font-bold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            {isSubmitting ? "Lagi nyimpen..." : "Gas Terus!"}
+            {isSubmitting ? copy.onboarding.submittingLabel : copy.onboarding.submitLabel}
           </Button>
         </form>
       </motion.div>

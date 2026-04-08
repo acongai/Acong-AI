@@ -1,34 +1,35 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
-import { Trash2 } from "lucide-react"
-
+import { MoreVertical, Trash2, MessageSquare, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { useCharacter } from "@/hooks/useCharacter"
-
+import { useLanguage } from "@/hooks/useLanguage"
+import type { AppThread } from "@/types"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { COPY } from "@/lib/copy"
-import { cn } from "@/lib/utils"
-import type { AppThread } from "@/types"
+import { Button } from "@/components/ui/button"
 
 interface ThreadListProps {
-  activeThreadId?: string | null
-  onDeleteThread?: (threadId: string) => Promise<void>
-  onNavigate?: () => void
+  activeThreadId?: string
+  onDeleteThread: (id: string) => Promise<void>
+  onNavigate: (id: string) => void
   threads: AppThread[]
 }
 
-function formatThreadTime(value: string) {
+function formatThreadTime(value: string, copy: any) {
   const date = new Date(value)
 
   if (Number.isNaN(date.getTime())) {
-    return COPY.thread.justNow
+    return copy.thread.justNow
   }
 
   const diffMinutes = Math.max(
@@ -37,17 +38,17 @@ function formatThreadTime(value: string) {
   )
 
   if (diffMinutes < 60) {
-    return `${diffMinutes}m lalu`
+    return `${diffMinutes}m ${copy.thread.timeSuffix}`
   }
 
   const diffHours = Math.round(diffMinutes / 60)
 
   if (diffHours < 24) {
-    return `${diffHours}j lalu`
+    return `${diffHours}j ${copy.thread.timeSuffix}`
   }
 
   const diffDays = Math.round(diffHours / 24)
-  return `${diffDays}h lalu`
+  return `${diffDays}h ${copy.thread.timeSuffix}`
 }
 
 export function ThreadList({
@@ -59,6 +60,7 @@ export function ThreadList({
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const { characters } = useCharacter()
+  const { copy } = useLanguage()
 
   async function handleConfirmDelete() {
     if (!pendingDeleteId || !onDeleteThread) return
@@ -74,8 +76,8 @@ export function ThreadList({
 
   if (!threads.length) {
     return (
-      <div className="rounded-lg border border-dashed border-[#E4E4E4] p-4 text-sm leading-6 text-[#999999]">
-        {COPY.sidebar.emptyThreads}
+      <div className="rounded-lg border border-dashed border-[var(--sidebar-border)] p-4 text-sm leading-6 text-[var(--muted-foreground)]">
+        {copy.sidebar.emptyThreads}
       </div>
     )
   }
@@ -104,7 +106,7 @@ export function ThreadList({
                     : "border-[var(--sidebar-border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-accent)]",
                 )}
                 href={`/chat/${thread.id}`}
-                onClick={onNavigate}
+                onClick={() => onNavigate(thread.id)}
               >
                 <div className="flex items-center gap-3">
                   <div className="relative h-8 w-8 shrink-0">
@@ -118,16 +120,25 @@ export function ThreadList({
                               className="h-7 w-7 overflow-hidden rounded-full border-2 border-[var(--sidebar)] bg-[var(--secondary)]"
                               style={{ zIndex: 10 - i }}
                             >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={char?.avatarSrc} className="h-full w-full object-cover" alt="" />
                             </div>
                           )
                         })}
                       </div>
                     ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--sidebar-accent)] text-[var(--muted-foreground)] opacity-70">
-                        <span className="text-sm">💬</span>
-                      </div>
+                      memberIds[0] ? (
+                        <div className="h-8 w-8 overflow-hidden rounded-lg bg-[var(--sidebar-accent)]">
+                          <img 
+                            src={characters.find(c => c.id === memberIds[0])?.avatarSrc} 
+                            className="h-full w-full object-cover" 
+                            alt="" 
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--sidebar-accent)] text-[var(--muted-foreground)] opacity-70">
+                          <span className="text-sm">💬</span>
+                        </div>
+                      )
                     )}
                   </div>
 
@@ -141,25 +152,23 @@ export function ThreadList({
                   </div>
 
                   <div className="flex shrink-0 items-center gap-1">
-                    <span className="text-[11px] text-[#BBBBBB]">
-                      {formatThreadTime(thread.updatedAt)}
+                    <span className="text-[10px] text-[var(--muted-foreground)] opacity-60">
+                      {formatThreadTime(thread.updatedAt, copy)}
                     </span>
 
-                    {onDeleteThread && (
                       <button
-                        className="rounded p-0.5 text-[#CCCCCC] opacity-0 transition-all hover:text-[#E5484D] group-hover:opacity-100"
+                        className="rounded p-0.5 text-[var(--muted-foreground)] opacity-0 transition-all hover:text-[#E5484D] group-hover:opacity-100"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           setPendingDeleteId(thread.id)
                         }}
-                        title="Hapus chat"
+                        title={copy.thread.deleteTitle}
                         type="button"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                    )}
-                  </div>
+                    </div>
                 </div>
               </Link>
             </motion.div>
@@ -167,37 +176,37 @@ export function ThreadList({
         })}
       </div>
 
-      <Dialog
-        onOpenChange={(open) => {
-          if (!open) setPendingDeleteId(null)
-        }}
-        open={pendingDeleteId !== null}
+      <Dialog 
+        open={!!pendingDeleteId} 
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
       >
-        <DialogContent className="border-[#E4E4E4] bg-white text-[#111111] sm:max-w-sm" showCloseButton={false}>
-          <DialogTitle className="text-base font-semibold text-[#111111]">
-            Yakin mau hapus chat ini?
-          </DialogTitle>
-          <DialogDescription className="text-sm text-[#666666]">
-            Chat ini bakal ilang selamanya. Acong pun gak bisa bantu kalau udah gitu.
-          </DialogDescription>
-          <div className="flex justify-end gap-2 pt-1">
-            <button
-              className="h-9 rounded border border-[#E4E4E4] px-4 text-sm text-[#666666] transition-colors hover:bg-[#F8F8F8]"
-              disabled={isDeleting}
+        <DialogContent className="max-w-[320px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-500">
+              <AlertCircle className="h-4 w-4" />
+              {copy.thread.deleteTitle}
+            </DialogTitle>
+            <DialogDescription>
+              {copy.thread.deleteConfirm}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="ghost"
               onClick={() => setPendingDeleteId(null)}
-              type="button"
+              disabled={isDeleting}
             >
               Batal
-            </button>
-            <button
-              className="h-9 rounded bg-[#E5484D] px-4 text-sm font-medium text-white transition-colors hover:bg-[#C93B3F] disabled:opacity-60"
-              disabled={isDeleting}
+            </Button>
+            <Button
+              variant="destructive"
               onClick={handleConfirmDelete}
-              type="button"
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600"
             >
-              {isDeleting ? "Menghapus..." : "Hapus"}
-            </button>
-          </div>
+              {isDeleting ? copy.thread.deletingAction : copy.thread.deleteAction}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
