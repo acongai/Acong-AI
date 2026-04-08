@@ -83,22 +83,6 @@ export function AppShell({ children }: AppShellProps) {
     }
   }
 
-  const checkConsent = useEffectEvent(async (userId: string) => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from("profiles")
-      .select("has_consented")
-      .eq("id", userId)
-      .single()
-
-    if (!data?.has_consented) {
-      setConsentUserId(userId)
-      setConsentOpen(true)
-    } else {
-      void checkOnboarding(userId)
-    }
-  })
-
   const checkOnboarding = useEffectEvent(async (userId: string) => {
     const supabase = createClient()
     const { data } = await supabase
@@ -112,6 +96,22 @@ export function AppShell({ children }: AppShellProps) {
       setOnboardingOpen(true)
     } else {
       showPricingIfNeeded()
+    }
+  })
+
+  const checkConsent = useEffectEvent(async (userId: string) => {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from("profiles")
+      .select("has_consented")
+      .eq("id", userId)
+      .single()
+
+    if (!data?.has_consented) {
+      setConsentUserId(userId)
+      setConsentOpen(true)
+    } else {
+      void checkOnboarding(userId)
     }
   })
 

@@ -61,14 +61,15 @@ interface CharacterContextType {
 const CharacterContext = createContext<CharacterContextType | undefined>(undefined)
 
 export function CharacterProvider({ children }: { children: React.ReactNode }) {
-  const [activeId, setActiveId] = useState<string>("acong")
-
-  useEffect(() => {
-    const saved = localStorage.getItem("acong_active_character")
-    if (saved && CHARACTERS.find(c => c.id === saved)) {
-      setActiveId(saved)
+  const [activeId, setActiveId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("acong_active_character")
+      if (saved && CHARACTERS.find(c => c.id === saved)) {
+        return saved
+      }
     }
-  }, [])
+    return "acong"
+  })
 
   const activeCharacter = CHARACTERS.find((c) => c.id === activeId) || CHARACTERS[0]
 

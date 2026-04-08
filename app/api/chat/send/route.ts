@@ -194,6 +194,11 @@ export async function POST(request: NextRequest) {
         content_type: "system",
         status: "completed"
       })
+      await refundCredits(user.id, 1, {
+        note: `Refund for failed ${charId} reply`,
+        referenceId: placeholder.id,
+        referenceType: "message",
+      })
     }
   }
 

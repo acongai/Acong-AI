@@ -15,22 +15,19 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("id")
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof document !== "undefined") {
+      const cookieValue = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("NEXT_LOCALE="))
+        ?.split("=")[1] as Locale | undefined
 
-  useEffect(() => {
-    // 1. Check cookie
-    const cookieValue = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("NEXT_LOCALE="))
-      ?.split("=")[1] as Locale | undefined
-
-    if (cookieValue === "id" || cookieValue === "en") {
-      setLocaleState(cookieValue)
-    } else {
-      // 2. Fallback to browser lang or keep 'id'
-      // In production, middleware will set this cookie based on geo
+      if (cookieValue === "id" || cookieValue === "en") {
+        return cookieValue
+      }
     }
-  }, [])
+    return "id"
+  })
 
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale)

@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import Image from "next/image"
 import { MoreVertical, Trash2, MessageSquare, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCharacter } from "@/hooks/useCharacter"
@@ -121,17 +123,19 @@ export function ThreadList({
                               className="h-7 w-7 overflow-hidden rounded-full border-2 border-[var(--sidebar)] bg-[var(--secondary)]"
                               style={{ zIndex: 10 - i }}
                             >
-                              <img src={char?.avatarSrc} className="h-full w-full object-cover" alt="" />
+                              <Image src={char?.avatarSrc || "/images/ACONG BETE.png"} className="h-full w-full object-cover" alt="" width={28} height={28} />
                             </div>
                           )
                         })}
                       </div>
                     ) : (
                       <div className="h-8 w-8 overflow-hidden rounded-full bg-[var(--sidebar-accent)] shadow-sm">
-                        <img 
-                          src={characters.find(c => c.id === characterId)?.avatarSrc || characters.find(c => c.id === "acong")?.avatarSrc} 
+                        <Image 
+                          src={characters.find(c => c.id === characterId)?.avatarSrc || characters.find(c => c.id === "acong")?.avatarSrc || "/images/ACONG BETE.png"} 
                           className="h-full w-full object-cover" 
                           alt="" 
+                          width={32}
+                          height={32}
                         />
                       </div>
                     )}

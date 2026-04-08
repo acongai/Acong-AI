@@ -12,15 +12,13 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light")
-
-  useEffect(() => {
-    // 1. Check localStorage or system preference
-    const savedTheme = localStorage.getItem("acong_theme") as Theme | null
-    if (savedTheme) {
-      setTheme(savedTheme)
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("acong_theme") as Theme | null
+      if (savedTheme) return savedTheme
     }
-  }, [])
+    return "light"
+  })
 
   useEffect(() => {
     // 2. Apply theme to HTML element

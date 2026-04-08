@@ -6,6 +6,7 @@ import { createClient } from "@/supabase/client"
 import { toast } from "sonner"
 import { useState, useRef, useEffect } from "react"
 import { useLanguage } from "@/hooks/useLanguage"
+import Image from "next/image"
 
 interface GroupHeaderProps {
   threadId: string
@@ -85,19 +86,19 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
           {/* Mpok Left */}
           {memberIds.includes('mpok') && !kickedIds.includes('mpok') && (
             <div className="absolute left-0 bottom-0 z-10 h-8 w-8 -rotate-12 transform overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-lg transition-transform hover:scale-110">
-              <img src={characters.find(c => c.id === 'mpok')?.avatarSrc} className="h-full w-full object-cover" alt="Mpok" />
+              <Image src={characters.find(c => c.id === 'mpok')?.avatarSrc || "/images/ACONG BETE.png"} className="h-full w-full object-cover" alt="Mpok" width={32} height={32} />
             </div>
           )}
           {/* Acong Center (Raised) */}
           {memberIds.includes('acong') && !kickedIds.includes('acong') && (
             <div className="absolute left-4 top-0 z-30 h-9 w-9 overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-xl transition-transform hover:scale-110">
-              <img src={characters.find(c => c.id === 'acong')?.avatarSrc} className="h-full w-full object-cover" alt="Acong" />
+              <Image src={characters.find(c => c.id === 'acong')?.avatarSrc || "/images/ACONG BETE.png"} className="h-full w-full object-cover" alt="Acong" width={36} height={36} />
             </div>
           )}
           {/* Babeh Right */}
           {memberIds.includes('babeh') && !kickedIds.includes('babeh') && (
             <div className="absolute left-8 bottom-0 z-20 h-8 w-8 rotate-12 transform overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-lg transition-transform hover:scale-110">
-              <img src={characters.find(c => c.id === 'babeh')?.avatarSrc} className="h-full w-full object-cover" alt="Babeh" />
+              <Image src={characters.find(c => c.id === 'babeh')?.avatarSrc || "/images/ACONG BETE.png"} className="h-full w-full object-cover" alt="Babeh" width={32} height={32} />
             </div>
           )}
         </div>
@@ -147,7 +148,7 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
               key={id}
               className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] shadow-sm transition-all ${isKicked ? 'opacity-30 grayscale' : ''}`}
             >
-              <img src={char?.avatarSrc} className="h-full w-full rounded-full object-cover" alt={id} title={id} />
+              <Image src={char?.avatarSrc || "/images/ACONG BETE.png"} className="h-full w-full rounded-full object-cover" alt={id} title={id} width={32} height={32} />
               
               <button
                 onClick={() => isKicked ? handleReAdd(id) : handleKick(id)}
