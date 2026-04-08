@@ -557,8 +557,8 @@ export function useThread({
           .select()
           .single()
 
-        if (threadError) throw threadError
-        router.push(`/chat/${newThread.id}`)
+        if (threadError || !newThread) throw threadError || new Error("Failed to create thread")
+        router.push(`/chat/${(newThread as any).id}`)
       } catch (err) {
         toast.error("Gagal bikin grup, coba lagi ya.")
       } finally {
