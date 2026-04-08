@@ -17,6 +17,7 @@ interface GeminiConversationMessage {
 interface GenerateTextParams {
   conversation: GeminiConversationMessage[]
   systemPrompt: string
+  characterId?: string
 }
 
 interface GeminiUsageMetadataPayload {
@@ -110,9 +111,17 @@ function logGeminiResponse({
   }
 }
 
+// Character-appropriate fallback responses when Gemini safety/filter triggers
+const SAFETY_FALLBACKS: Record<string, string> = {
+  acong: "...gue lagi males ngomong soal itu. Tanya yang lain.",
+  mpok: "Aduh, Mpok nggak enak mau bahas yang itu. Ganti topik ya.",
+  babeh: "Wah itu mah bukan urusan Babeh. Tanya yang lain aja.",
+}
+
 export async function generateTextResponse({
   conversation,
   systemPrompt,
+  characterId,
 }: GenerateTextParams) {
   const apiKey = getApiKey()
   const url = `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`
@@ -197,8 +206,27 @@ export async function generateTextResponse({
       text,
     })
 
-    if (!text) {
-      throw new Error("Gemini returned an empty response")
+    if (!text || finishReason === "SAFETY" || finishReason === "OTHER") {
+      const fallbackCharId = characterId ?? "acong"
+      const fallbackText = SAFETY_FALLBACKS[fallbackCharId] ?? SAFETY_FALLBACKS["acong"]
+      console.warn("[gemini] empty/safety response — using fallback", {
+        characterId: fallbackCharId,
+        finishReason,
+        finishMessage: meta.finishMessage,
+        textLength: text.length,
+        responseId: meta.responseId,
+        promptTokenCount: meta.usageMetadata?.promptTokenCount,
+        totalTokenCount: meta.usageMetadata?.totalTokenCount,
+      })
+      return {
+        finishMessage: meta.finishMessage,
+        finishReason: meta.finishReason,
+        isTruncated: false,
+        requestId: meta.requestId,
+        responseId: meta.responseId,
+        text: fallbackText,
+        usageMetadata: meta.usageMetadata,
+      }
     }
 
     return {

@@ -88,6 +88,7 @@ export async function orchestrateTextReply({
   const response = await generateTextResponse({
     conversation,
     systemPrompt,
+    characterId,
   })
 
   return {

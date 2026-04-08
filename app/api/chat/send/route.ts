@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     })
 
     try {
-      const historyRows = await getConversationContext(user.id, thread.id, 20)
+      const historyRows = await getConversationContext(user.id, thread.id, isGroup ? 10 : 20)
       const history = historyRows
         .filter((message) => message.id !== placeholder.id)
         .map((message) => ({
@@ -181,11 +181,19 @@ export async function POST(request: NextRequest) {
       results.push(assistantMessage)
       await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
     } catch (err) {
-      console.error("Sequential reply error", err)
+      const errMsg = err instanceof Error ? err.message : String(err)
+      const errStack = err instanceof Error ? err.stack : undefined
+      console.error("[send:orchestrator] character reply failed", {
+        characterId: charId,
+        threadId: thread.id,
+        isGroup,
+        errorMessage: errMsg,
+        errorStack: errStack,
+        timestamp: new Date().toISOString(),
+      })
       // Delete placeholder and create system error message instead of character error bubble
       const admin = await createClient()
       await admin.from("chat_messages").delete().eq("id", placeholder.id)
-      
       await admin.from("chat_messages").insert({
         thread_id: thread.id,
         user_id: user.id,
@@ -195,7 +203,7 @@ export async function POST(request: NextRequest) {
         status: "completed"
       })
       await refundCredits(user.id, 1, {
-        note: `Refund for failed ${charId} reply`,
+        note: `Refund for failed ${charId} reply: ${errMsg}`,
         referenceId: placeholder.id,
         referenceType: "message",
       })
