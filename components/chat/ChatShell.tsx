@@ -145,7 +145,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
             initial={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.25 }}
           >
-            <EmptyStateMascot thread={thread} />
+            <EmptyStateMascot thread={thread} threadId={threadId} />
           </motion.div>
 
           <motion.div

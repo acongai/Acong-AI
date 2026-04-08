@@ -19,9 +19,10 @@ import { Check, Edit3, X as CloseIcon } from "lucide-react"
 interface EmptyStateMascotProps {
   className?: string
   thread?: any
+  threadId?: string
 }
 
-export function EmptyStateMascot({ className, thread }: EmptyStateMascotProps) {
+export function EmptyStateMascot({ className, thread, threadId }: EmptyStateMascotProps) {
   const { characters, activeCharacter, switchCharacter } = useCharacter()
   const ref = useRef<HTMLDivElement>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
@@ -42,7 +43,7 @@ export function EmptyStateMascot({ className, thread }: EmptyStateMascotProps) {
   }, [isEditing])
 
   const handleRename = async () => {
-    if (!newTitle.trim() || newTitle === thread?.threadTitle) {
+    if (!newTitle.trim() || newTitle === thread?.threadTitle || !threadId) {
       setIsEditing(false)
       return
     }
@@ -51,13 +52,14 @@ export function EmptyStateMascot({ className, thread }: EmptyStateMascotProps) {
     const { error } = await supabase
       .from("chat_threads")
       .update({ title: newTitle.trim() })
-      .eq("id", thread.id)
+      .eq("id", threadId)
 
     if (error) {
       toast.error("Failed to rename group")
     } else {
+      window.dispatchEvent(new CustomEvent("acong:threads:refresh"))
+      await thread?.refresh?.()
       setIsEditing(false)
-      // Since it's server state we wait for next refresh cycle
     }
   }
 
