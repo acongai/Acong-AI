@@ -38,6 +38,7 @@ export async function orchestrateTextReply({
   userInput,
   locale = "id",
   characterId = "acong",
+  groupMemberIds = [],
 }: {
   history: OrchestratorMessage[]
   userInput: string
