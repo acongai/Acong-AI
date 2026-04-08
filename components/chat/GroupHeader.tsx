@@ -78,30 +78,31 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
   }
 
   return (
-    <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/80 px-4 py-2 backdrop-blur-md">
+    <div className="flex h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/80 px-4 py-2 backdrop-blur-md">
       <div className="flex items-center gap-4">
         {/* Dynamic Overlap Display */}
         <div className="relative flex h-10 w-16">
           {/* Mpok Left */}
-          <div className="absolute left-0 bottom-0 z-10 h-8 w-8 -rotate-12 transform overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-lg transition-transform hover:scale-110">
-            <img src={characters.find(c => c.id === 'mpok')?.avatarSrc} className="h-full w-full object-cover" alt="Mpok" />
-          </div>
+          {memberIds.includes('mpok') && !kickedIds.includes('mpok') && (
+            <div className="absolute left-0 bottom-0 z-10 h-8 w-8 -rotate-12 transform overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-lg transition-transform hover:scale-110">
+              <img src={characters.find(c => c.id === 'mpok')?.avatarSrc} className="h-full w-full object-cover" alt="Mpok" />
+            </div>
+          )}
           {/* Acong Center (Raised) */}
-          <div className="absolute left-4 top-0 z-30 h-9 w-9 overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-xl transition-transform hover:scale-110">
-            <img src={characters.find(c => c.id === 'acong')?.avatarSrc} className="h-full w-full object-cover" alt="Acong" />
-          </div>
+          {memberIds.includes('acong') && !kickedIds.includes('acong') && (
+            <div className="absolute left-4 top-0 z-30 h-9 w-9 overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-xl transition-transform hover:scale-110">
+              <img src={characters.find(c => c.id === 'acong')?.avatarSrc} className="h-full w-full object-cover" alt="Acong" />
+            </div>
+          )}
           {/* Babeh Right */}
-          <div className="absolute left-8 bottom-0 z-20 h-8 w-8 rotate-12 transform overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-lg transition-transform hover:scale-110">
-            <img src={characters.find(c => c.id === 'babeh')?.avatarSrc} className="h-full w-full object-cover" alt="Babeh" />
-          </div>
+          {memberIds.includes('babeh') && !kickedIds.includes('babeh') && (
+            <div className="absolute left-8 bottom-0 z-20 h-8 w-8 rotate-12 transform overflow-hidden rounded-full border-2 border-[var(--background)] bg-[var(--card)] shadow-lg transition-transform hover:scale-110">
+              <img src={characters.find(c => c.id === 'babeh')?.avatarSrc} className="h-full w-full object-cover" alt="Babeh" />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <Users className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
-            <span className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase tracking-[0.2em]">{copy.groupHeader.title}</span>
-          </div>
-          
           <div className="flex items-center gap-2">
             {isEditing ? (
               <div className="flex items-center gap-1">
@@ -113,7 +114,7 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
                     if (e.key === 'Enter') handleRename()
                     if (e.key === 'Escape') setIsEditing(false)
                   }}
-                  className="h-7 rounded border border-[var(--border)] bg-[var(--background)] px-2 text-sm font-bold text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+                  className="h-7 min-w-[200px] rounded border border-[var(--border)] bg-[var(--background)] px-2 text-sm font-bold text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                 />
                 <button onClick={handleRename} className="p-1 text-green-500 hover:text-green-600">
                   <Check className="h-4 w-4" />
@@ -135,8 +136,8 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
         </div>
       </div>
 
-      {/* Participant List - Spaced out for management */}
-      <div className="flex items-center gap-2 pl-4 border-l border-[var(--border)]">
+      {/* Participant List - Moved to center visually */}
+      <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-3">
         {memberIds.map(id => {
           const char = characters.find(c => c.id === id)
           const isKicked = kickedIds.includes(id)
@@ -162,6 +163,7 @@ export function GroupHeader({ threadId, title, memberIds, kickedIds, refresh }: 
           )
         })}
       </div>
+      <div></div>
     </div>
   )
 }

@@ -89,6 +89,7 @@ export function ThreadList({
           const active = activeThreadId === thread.id
           const isGroup = thread.type === "group"
           const memberIds = thread.metadata?.memberIds || []
+          const characterId = isGroup ? null : (thread.metadata?.character_id || thread.metadata?.characterId || "acong")
 
           return (
             <motion.div
@@ -112,7 +113,7 @@ export function ThreadList({
                   <div className="relative h-8 w-8 shrink-0">
                     {isGroup ? (
                       <div className="flex -space-x-4">
-                        {memberIds.slice(0, 3).map((id, i) => {
+                        {memberIds.slice(0, 3).map((id: string, i: number) => {
                           const char = characters.find(c => c.id === id)
                           return (
                             <div 
@@ -126,19 +127,13 @@ export function ThreadList({
                         })}
                       </div>
                     ) : (
-                      memberIds[0] ? (
-                        <div className="h-8 w-8 overflow-hidden rounded-lg bg-[var(--sidebar-accent)]">
-                          <img 
-                            src={characters.find(c => c.id === memberIds[0])?.avatarSrc} 
-                            className="h-full w-full object-cover" 
-                            alt="" 
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--sidebar-accent)] text-[var(--muted-foreground)] opacity-70">
-                          <span className="text-sm">💬</span>
-                        </div>
-                      )
+                      <div className="h-8 w-8 overflow-hidden rounded-full bg-[var(--sidebar-accent)] shadow-sm">
+                        <img 
+                          src={characters.find(c => c.id === characterId)?.avatarSrc || characters.find(c => c.id === "acong")?.avatarSrc} 
+                          className="h-full w-full object-cover" 
+                          alt="" 
+                        />
+                      </div>
                     )}
                   </div>
 

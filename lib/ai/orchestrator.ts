@@ -77,6 +77,10 @@ export async function orchestrateTextReply({
     systemPrompt += `\n\nKamu lagi di grup chat bareng ${memberNames}. User ini namanya ${userName || 'User'}, gendernya ${userGender || 'unknown'}. Kalau ada karakter yang udah dikick dari grup, kamu tau dan kagak perlu nunggu atau nyebut-nyebut dia lagi. Jawab ke user, bukan ke sesama karakter — boleh nyinggung karakter lain tapi konteksnya tetap ke user. Jawab sekali aja, jangan balas lagi setelah giliranmu selesai.`
   }
 
+  if (locale === "en") {
+    systemPrompt += `\n\nThe user has switched to English. You must respond in English only, while maintaining your character personality.`
+  }
+
   const conversation: OrchestratorMessage[] = [
     ...history.slice(-10),
     { role: "user", content: userInput },

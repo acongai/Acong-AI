@@ -28,5 +28,7 @@ export interface AppThread {
   metadata?: {
     memberIds?: string[]
     kickedIds?: string[]
+    characterId?: string
+    character_id?: string
   }
 }

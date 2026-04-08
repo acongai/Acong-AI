@@ -54,12 +54,14 @@ export async function getThreadForUser(userId: string, threadId: string) {
   return data as ChatThreadRow | null
 }
 
-export async function createThread(userId: string, title?: string | null) {
+export async function createThread(userId: string, title?: string | null, type: string = "individual", metadata: any = {}) {
   const admin = createAdminClient()
-  const payload: ChatThreadInsert = {
+  const payload: any = {
     user_id: userId,
     title: title ?? null,
     status: "active",
+    type,
+    metadata,
     updated_at: new Date().toISOString(),
   }
 

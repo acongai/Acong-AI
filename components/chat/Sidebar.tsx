@@ -196,7 +196,7 @@ export function Sidebar({
                           <User className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 text-left">
                         <p className="truncate text-xs font-medium text-[var(--sidebar-foreground)]">
                           {userName}
                         </p>

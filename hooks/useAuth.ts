@@ -10,16 +10,18 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [currentPlan, setCurrentPlan] = useState<string | null>(null)
+  const [profileName, setProfileName] = useState<string | null>(null)
   const userRef = useRef<User | null>(null)
 
   const fetchPlan = useEffectEvent(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("current_plan")
+      .select("current_plan, full_name")
       .eq("id", userId)
       .single()
 
     setCurrentPlan((data?.current_plan as string | null) ?? "free")
+    setProfileName(data?.full_name as string | null)
   })
 
   useEffect(() => {
@@ -103,5 +105,6 @@ export function useAuth() {
     isLoading,
     user,
     currentPlan,
+    profileName,
   }
 }

@@ -23,6 +23,7 @@ interface ComposerProps {
   value: string
   variant?: "default" | "centered"
   kickedIds?: string[]
+  memberIds?: string[]
 }
 
 export function Composer({
@@ -35,6 +36,7 @@ export function Composer({
   value,
   variant = "default",
   kickedIds = [],
+  memberIds = [],
 }: ComposerProps) {
   const canSend = value.trim().length > 0 && !disabled && !isSubmitting
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -123,7 +125,7 @@ export function Composer({
             className="absolute bottom-full left-4 mb-2 w-48 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xl"
           >
             {characters
-              .filter(c => !kickedIds.includes(c.id))
+              .filter(c => memberIds.length > 0 ? memberIds.includes(c.id) && !kickedIds.includes(c.id) : false)
               .filter(c => c.name.toLowerCase().includes(mentionQuery))
               .map(char => (
                 <button

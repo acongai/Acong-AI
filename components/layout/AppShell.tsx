@@ -202,7 +202,7 @@ export function AppShell({ children }: AppShellProps) {
         onOpenLogin={() => setLoginOpen(true)}
         planName={planName}
         threads={threadState.threads}
-        userName={auth.user?.email ?? null}
+        userName={auth.profileName ?? auth.user?.email ?? null}
         userAvatarUrl={(auth.user?.user_metadata?.avatar_url as string) ?? null}
       />
 
@@ -215,7 +215,7 @@ export function AppShell({ children }: AppShellProps) {
           onOpenLogin={() => setLoginOpen(true)}
           planName={planName}
           threads={threadState.threads}
-          userName={auth.user?.email ?? null}
+          userName={auth.profileName ?? auth.user?.email ?? null}
           userAvatarUrl={(auth.user?.user_metadata?.avatar_url as string) ?? null}
         />
       </MobileDrawer>

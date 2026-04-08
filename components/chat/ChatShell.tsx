@@ -123,6 +123,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
             onValueChange={setDraft}
             regenerateDisabled={messages.length === 0 || !threadId}
             kickedIds={thread.metadata?.kickedIds || []}
+            memberIds={thread.metadata?.memberIds || []}
             value={draft}
           />
         </section>
@@ -144,7 +145,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
             initial={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.25 }}
           >
-            <EmptyStateMascot />
+            <EmptyStateMascot thread={thread} />
           </motion.div>
 
           <motion.div
@@ -161,6 +162,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
               onValueChange={setDraft}
               regenerateDisabled={true}
               kickedIds={thread.metadata?.kickedIds || []}
+              memberIds={thread.metadata?.memberIds || []}
               value={draft}
               variant="centered"
             />
