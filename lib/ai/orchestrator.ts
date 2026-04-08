@@ -1,4 +1,11 @@
-import { ACONG_SYSTEM_PROMPT, ACONG_SYSTEM_PROMPT_EN } from "@/lib/ai/persona"
+import {
+  ACONG_SYSTEM_PROMPT,
+  ACONG_SYSTEM_PROMPT_EN,
+  MPOK_SYSTEM_PROMPT,
+  MPOK_SYSTEM_PROMPT_EN,
+  BABEH_SYSTEM_PROMPT,
+  BABEH_SYSTEM_PROMPT_EN,
+} from "@/lib/ai/persona"
 import { type GeminiUsageMetadata, generateTextResponse } from "@/lib/ai/gemini"
 import {
   computeTypoScore,
@@ -30,14 +37,23 @@ export async function orchestrateTextReply({
   history,
   userInput,
   locale = "id",
+  characterId = "acong",
 }: {
   history: OrchestratorMessage[]
   userInput: string
   locale?: "id" | "en"
+  characterId?: string
 }): Promise<OrchestratorResult> {
   const typoScore = computeTypoScore(userInput)
   const roastApplied = shouldRoastTypo(typoScore)
-  const basePrompt = locale === "en" ? ACONG_SYSTEM_PROMPT_EN : ACONG_SYSTEM_PROMPT
+
+  let basePrompt = locale === "en" ? ACONG_SYSTEM_PROMPT_EN : ACONG_SYSTEM_PROMPT
+  if (characterId === "mpok") {
+    basePrompt = locale === "en" ? MPOK_SYSTEM_PROMPT_EN : MPOK_SYSTEM_PROMPT
+  } else if (characterId === "babeh") {
+    basePrompt = locale === "en" ? BABEH_SYSTEM_PROMPT_EN : BABEH_SYSTEM_PROMPT
+  }
+
   const systemPrompt = roastApplied
     ? `${basePrompt}\n\n${locale === "en" ? "Additional instruction:\n- " : "Instruksi tambahan:\n- "}${getTypoRoastInstruction(locale)}`
     : basePrompt

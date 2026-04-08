@@ -24,6 +24,7 @@ import { checkRateLimit, getClientIp } from "@/lib/utils/ratelimit"
 
 const sendMessageSchema = z.object({
   attachmentIds: z.array(z.string().uuid()).max(4).optional().default([]),
+  characterId: z.string().optional(),
   threadId: z.string().uuid().optional(),
   content: z.string().trim().min(1).max(4000),
 })
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { attachmentIds, content, threadId } = parsedBody.data
+  const { attachmentIds, characterId, content, threadId } = parsedBody.data
 
   const initialThread =
     threadId !== undefined
@@ -169,6 +170,7 @@ export async function POST(request: NextRequest) {
       }))
 
     const orchestration = await orchestrateTextReply({
+      characterId,
       history,
       locale,
       userInput: content,
@@ -183,6 +185,7 @@ export async function POST(request: NextRequest) {
         ai_request_id: orchestration.meta.requestId,
         ai_response_id: orchestration.meta.responseId,
         ai_usage_metadata: orchestration.meta.usageMetadata,
+        character_id: characterId,
         roast_applied: orchestration.meta.roastApplied,
         typo_score: orchestration.meta.typoScore,
       },

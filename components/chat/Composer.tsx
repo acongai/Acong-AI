@@ -10,6 +10,7 @@ import { PricingPopup } from "@/components/payments/PricingPopup"
 import { useAuth } from "@/hooks/useAuth"
 import { useCredits } from "@/hooks/useCredits"
 import { useLanguage } from "@/hooks/useLanguage"
+import { useCharacter } from "@/hooks/useCharacter"
 
 interface ComposerProps {
   disabled?: boolean
@@ -38,6 +39,7 @@ export function Composer({
   const auth = useAuth()
   const credits = useCredits()
   const { copy } = useLanguage()
+  const { activeCharacter } = useCharacter()
   const handleCreditDeducted = useEffectEvent(() => {
     credits.refresh()
   })
@@ -88,7 +90,7 @@ export function Composer({
             void handleSubmit(value)
           }
         }}
-        placeholder={copy.composer.placeholder}
+        placeholder={activeCharacter.placeholderText}
         ref={textareaRef}
         rows={1}
         value={value}

@@ -5,6 +5,8 @@ import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import type { AppMessage } from "@/types"
 
+import { useCharacter } from "@/hooks/useCharacter"
+
 interface MessageBubbleProps {
   index: number
   message: AppMessage
@@ -29,6 +31,10 @@ function formatMessageTime(value?: string) {
 
 export function MessageBubble({ index, message }: MessageBubbleProps) {
   const isUser = message.role === "user"
+  const { characters } = useCharacter()
+  const characterId = message.metadata?.character_id
+  const character = characters.find((c) => c.id === characterId)
+  const displayName = character?.name || "Acong"
 
   return (
     <motion.article
@@ -37,6 +43,11 @@ export function MessageBubble({ index, message }: MessageBubbleProps) {
       initial={{ opacity: 0, y: 14 }}
       transition={{ delay: index * 0.04, duration: 0.22 }}
     >
+      {!isUser && (
+        <span className="mb-1 ml-1 text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] opacity-70">
+          {displayName}
+        </span>
+      )}
       <div
         className={cn(
           "max-w-[88%] px-4 py-3 text-[14px] leading-relaxed md:max-w-[75%]",

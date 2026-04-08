@@ -15,6 +15,7 @@ export interface AppMessage {
   createdAt?: string
   status?: ChatMessageStatus
   attachments?: AppAttachment[]
+  metadata?: any
 }
 
 export interface AppThread {

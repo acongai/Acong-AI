@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { toast } from "sonner"
+import { useCharacter } from "./useCharacter"
 
 import { COPY } from "@/lib/copy"
 import type {
@@ -52,6 +53,7 @@ function mapChatMessageToAppMessage(row: ChatMessageRow): AppMessage {
     content: row.content_text ?? getStatusFallback(row.status),
     createdAt: row.created_at ?? row.updated_at ?? undefined,
     status: row.status ?? undefined,
+    metadata: row.metadata,
   }
 }
 
@@ -266,6 +268,7 @@ export function useThread({
   const [threads, setThreads] = useState<AppThread[]>([])
   const [threadTitle, setThreadTitle] = useState<string | null>(null)
   const router = useRouter()
+  const { activeCharacter } = useCharacter()
 
   useEffect(() => {
     let cancelled = false
@@ -367,6 +370,7 @@ export function useThread({
         },
         body: JSON.stringify({
           attachmentIds,
+          characterId: activeCharacter.id,
           content: normalized,
           threadId,
         }),
@@ -455,6 +459,7 @@ export function useThread({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          characterId: activeCharacter.id,
           threadId,
         }),
       })

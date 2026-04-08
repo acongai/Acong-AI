@@ -17,6 +17,7 @@ import { createClient } from "@/supabase/server"
 import { checkRateLimit, getClientIp } from "@/lib/utils/ratelimit"
 
 const regenerateSchema = z.object({
+  characterId: z.string().optional(),
   threadId: z.string().uuid(),
 })
 
@@ -139,6 +140,7 @@ export async function POST(request: NextRequest) {
       }))
 
     const orchestration = await orchestrateTextReply({
+      characterId: parsedBody.data.characterId,
       history,
       locale,
       userInput: lastUserMessage.content_text,
@@ -153,6 +155,7 @@ export async function POST(request: NextRequest) {
         ai_request_id: orchestration.meta.requestId,
         ai_response_id: orchestration.meta.responseId,
         ai_usage_metadata: orchestration.meta.usageMetadata,
+        character_id: parsedBody.data.characterId,
         roast_applied: orchestration.meta.roastApplied,
         typo_score: orchestration.meta.typoScore,
       },
