@@ -88,6 +88,18 @@ export async function POST(request: NextRequest) {
     characterOrder = [characterId || 'acong']
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, gender")
+    .eq("id", user.id)
+    .single()
+
+  const userName = profile?.full_name ?? user.user_metadata?.full_name
+  const userGender = profile?.gender as "male" | "female" | undefined
+
+  // Deduplicate characterOrder to prevent double responses
+  characterOrder = Array.from(new Set(characterOrder))
+
   const creditCost = characterOrder.length
 
   const userMessage = await createUserMessage({
@@ -133,6 +145,7 @@ export async function POST(request: NextRequest) {
       status: "generating",
       threadId: thread.id,
       userId: user.id,
+      metadata: { character_id: charId }
     })
 
     try {
@@ -150,6 +163,8 @@ export async function POST(request: NextRequest) {
         locale,
         userInput: content,
         groupMemberIds: isGroup ? activeMembers : [],
+        userName,
+        userGender,
       })
 
       const assistantMessage = await completeAssistantMessage({
@@ -166,11 +181,17 @@ export async function POST(request: NextRequest) {
       await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
     } catch (err) {
       console.error("Sequential reply error", err)
-      await failAssistantMessage({
-        content: copy.errorMessage,
-        messageId: placeholder.id,
-        metadata: { stage: "sequential" },
-        userId: user.id,
+      // Delete placeholder and create system error message instead of character error bubble
+      const admin = await createClient()
+      await admin.from("chat_messages").delete().eq("id", placeholder.id)
+      
+      await admin.from("chat_messages").insert({
+        thread_id: thread.id,
+        user_id: user.id,
+        role: "system",
+        content_text: copy.errorMessage,
+        content_type: "system",
+        status: "completed"
       })
     }
   }
@@ -182,4 +203,5 @@ export async function POST(request: NextRequest) {
     userMessage,
   })
 }
+
 

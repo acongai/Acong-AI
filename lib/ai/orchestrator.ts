@@ -39,12 +39,16 @@ export async function orchestrateTextReply({
   locale = "id",
   characterId = "acong",
   groupMemberIds = [],
+  userName,
+  userGender,
 }: {
   history: OrchestratorMessage[]
   userInput: string
   locale?: "id" | "en"
   characterId?: string
   groupMemberIds?: string[]
+  userName?: string
+  userGender?: "male" | "female"
 }): Promise<OrchestratorResult> {
   const typoScore = computeTypoScore(userInput)
   const roastApplied = shouldRoastTypo(typoScore)
@@ -60,9 +64,17 @@ export async function orchestrateTextReply({
     ? `${basePrompt}\n\n${locale === "en" ? "Additional instruction:\n- " : "Instruksi tambahan:\n- "}${getTypoRoastInstruction(locale)}`
     : basePrompt
 
+  // Personalized rules based on persona
+  if (characterId === 'acong') {
+    systemPrompt += `\n\nHARD RULE: Jangan pernah manggil user pake nama. Pake 'lo/gw' aja. Titik.`
+  } else if (userName && (characterId === 'mpok' || characterId === 'babeh')) {
+    const address = userGender === 'male' ? 'tong' : 'neng'
+    systemPrompt += `\n\nInstruksi Tambahan: Panggil user sesekali pake namanya (${userName}) atau '${address}'.`
+  }
+
   if (groupMemberIds && groupMemberIds.length > 0) {
     const memberNames = groupMemberIds.map(id => id === 'acong' ? 'Acong' : id === 'mpok' ? 'Mpok' : 'Babeh').join(', ')
-    systemPrompt += `\n\nKamu lagi di grup chat bareng: ${memberNames}. Jawab sesuai kepribadian lu dan konteks grup.`
+    systemPrompt += `\n\nKamu lagi di grup chat bareng ${memberNames}. User ini namanya ${userName || 'User'}, gendernya ${userGender || 'unknown'}. Kalau ada karakter yang udah dikick dari grup, kamu tau dan kagak perlu nunggu atau nyebut-nyebut dia lagi. Jawab ke user, bukan ke sesama karakter — boleh nyinggung karakter lain tapi konteksnya tetap ke user. Jawab sekali aja, jangan balas lagi setelah giliranmu selesai.`
   }
 
   const conversation: OrchestratorMessage[] = [

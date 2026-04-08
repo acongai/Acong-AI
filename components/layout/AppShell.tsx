@@ -27,6 +27,11 @@ const ConsentModal = dynamic(
   { ssr: false },
 )
 
+const OnboardingModal = dynamic(
+  () => import("@/components/auth/OnboardingModal").then((m) => m.OnboardingModal),
+  { ssr: false },
+)
+
 interface AppShellProps {
   children: ReactNode
 }
@@ -37,6 +42,8 @@ export function AppShell({ children }: AppShellProps) {
   const [pricingOpen, setPricingOpen] = useState(false)
   const [consentOpen, setConsentOpen] = useState(false)
   const [consentUserId, setConsentUserId] = useState<string | null>(null)
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
+  const [onboardingUserId, setOnboardingUserId] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -88,9 +95,31 @@ export function AppShell({ children }: AppShellProps) {
       setConsentUserId(userId)
       setConsentOpen(true)
     } else {
+      void checkOnboarding(userId)
+    }
+  })
+
+  const checkOnboarding = useEffectEvent(async (userId: string) => {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name, gender")
+      .eq("id", userId)
+      .single()
+
+    if (!data?.full_name || !data?.gender) {
+      setOnboardingUserId(userId)
+      setOnboardingOpen(true)
+    } else {
       showPricingIfNeeded()
     }
   })
+
+  function handleOnboardingComplete() {
+    setOnboardingOpen(false)
+    setOnboardingUserId(null)
+    showPricingIfNeeded()
+  }
 
   function handleConsented() {
     setConsentOpen(false)
@@ -251,6 +280,13 @@ export function AppShell({ children }: AppShellProps) {
         mode="onboarding"
         onClose={() => setPricingOpen(false)}
       />
+
+      {onboardingUserId && onboardingOpen ? (
+        <OnboardingModal
+          userId={onboardingUserId}
+          onComplete={handleOnboardingComplete}
+        />
+      ) : null}
     </div>
   )
 }

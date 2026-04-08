@@ -29,11 +29,13 @@ function ContentWithMentions({ content }: { content: string }) {
   const { characters } = useCharacter()
   const charNames = characters.map(c => c.name)
   
-  // Create regex pattern for @Name (case insensitive)
-  const pattern = new RegExp(`@(${charNames.join("|")})`, "gi")
+  // Regex for splitting (non-capturing)
+  const splitPattern = new RegExp(`@(?:${charNames.join("|")})`, "gi")
+  // Regex for finding matches (capturing)
+  const matchPattern = new RegExp(`@(${charNames.join("|")})`, "gi")
   
-  const parts = content.split(pattern)
-  const matches = [...content.matchAll(pattern)]
+  const parts = content.split(splitPattern)
+  const matches = [...content.matchAll(matchPattern)]
   
   let result: React.ReactNode[] = []
   let matchIdx = 0

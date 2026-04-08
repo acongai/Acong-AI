@@ -47,6 +47,8 @@ export interface Database {
           id: string
           email: string | null
           display_name: string | null
+          full_name: string | null
+          gender: string | null
           created_at: string | null
           updated_at: string | null
           free_credits_granted: boolean | null
@@ -61,6 +63,8 @@ export interface Database {
           id: string
           email?: string | null
           display_name?: string | null
+          full_name?: string | null
+          gender?: string | null
           created_at?: string | null
           updated_at?: string | null
           free_credits_granted?: boolean | null
@@ -75,6 +79,8 @@ export interface Database {
           id?: string
           email?: string | null
           display_name?: string | null
+          full_name?: string | null
+          gender?: string | null
           created_at?: string | null
           updated_at?: string | null
           free_credits_granted?: boolean | null
