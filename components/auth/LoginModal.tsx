@@ -59,13 +59,13 @@ export function LoginModal({
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="gap-0 overflow-hidden rounded-2xl border-[#E4E4E4] p-0 text-[#111111] sm:max-w-3xl">
+      <DialogContent className="gap-0 overflow-hidden rounded-2xl border-[var(--border)] bg-[var(--card)] p-0 text-[var(--foreground)] sm:max-w-3xl">
         <div className="flex flex-col md:flex-row">
 
           {/* Left column — mascot + copy */}
-          <div className="hidden flex-col items-center justify-center gap-5 rounded-l-2xl bg-[#F2F2F2] p-10 text-center md:flex md:w-1/2">
+          <div className="hidden flex-col items-center justify-center gap-5 rounded-l-2xl bg-[var(--secondary)] p-10 text-center md:flex md:w-1/2">
             <div className="relative flex items-center justify-center">
-              <div className="absolute h-32 w-32 rounded-full bg-gray-400 opacity-20 blur-2xl" />
+              <div className="absolute h-32 w-32 rounded-full bg-[var(--foreground)] opacity-10 blur-2xl" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt="Acong"
@@ -77,30 +77,30 @@ export function LoginModal({
             </div>
 
             <div className="space-y-2">
-              <DialogTitle className="text-lg font-semibold leading-snug text-[#111111]">
+              <DialogTitle className="text-lg font-semibold leading-snug text-[var(--foreground)]">
                 {COPY.dialogs.loginTitle}
               </DialogTitle>
-              <DialogDescription className="text-xs leading-5 text-[#666666]">
+              <DialogDescription className="text-xs leading-5 text-[var(--muted-foreground)]">
                 {COPY.dialogs.loginSubtitle}
               </DialogDescription>
             </div>
           </div>
 
           {/* Right column — Google login */}
-          <div className="flex w-full flex-col items-center justify-center gap-5 rounded-2xl bg-white p-8 md:w-1/2 md:rounded-l-none md:rounded-r-2xl">
+          <div className="flex w-full flex-col items-center justify-center gap-5 rounded-2xl bg-[var(--card)] p-8 md:w-1/2 md:rounded-l-none md:rounded-r-2xl">
 
             {/* Title visible on mobile only */}
             <div className="w-full md:hidden">
-              <DialogTitle className="text-lg font-semibold text-[#111111]">
+              <DialogTitle className="text-lg font-semibold text-[var(--foreground)]">
                 {COPY.dialogs.loginTitle}
               </DialogTitle>
-              <DialogDescription className="mt-1 text-xs leading-5 text-[#666666]">
+              <DialogDescription className="mt-1 text-xs leading-5 text-[var(--muted-foreground)]">
                 {COPY.dialogs.loginSubtitle}
               </DialogDescription>
             </div>
 
             {displayError ? (
-              <p className="w-full text-sm text-[#E5484D]">{displayError}</p>
+              <p className="w-full text-sm text-[var(--destructive)]">{displayError}</p>
             ) : null}
 
             <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
@@ -111,7 +111,7 @@ export function LoginModal({
             </svg>
 
             <Button
-              className="h-10 w-full bg-[#111111] text-sm text-white hover:bg-[#222222]"
+              className="h-10 w-full bg-[var(--primary)] text-sm text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90"
               disabled={loading}
               onClick={handleGoogleLogin}
               type="button"

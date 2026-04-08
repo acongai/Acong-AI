@@ -41,8 +41,8 @@ export function PackageSelector({
             className={cn(
               "rounded-lg border p-4 text-left transition-colors",
               active
-                ? "border-[#111111] bg-white"
-                : "border-[#E4E4E4] bg-[#F8F8F8] hover:border-[#111111]",
+                ? "border-[var(--foreground)] bg-[var(--card)]"
+                : "border-[var(--border)] bg-[var(--secondary)] hover:border-[var(--foreground)]",
             )}
             initial={{ opacity: 0, y: 12 }}
             key={item.code}
@@ -52,16 +52,16 @@ export function PackageSelector({
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#999999]">
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
                   {item.code === "package_basic"
                     ? COPY.packageBasicName
                     : COPY.packageProName}
                 </p>
-                <p className="mt-2 text-xl font-semibold text-[#111111]">
+                <p className="mt-2 text-xl font-semibold text-[var(--foreground)]">
                   {item.credits} kredit
                 </p>
               </div>
-              <span className="text-sm font-medium text-[#666666]">
+              <span className="text-sm font-medium text-[var(--muted-foreground)]">
                 {formatIdr(item.priceIdr)}
               </span>
             </div>

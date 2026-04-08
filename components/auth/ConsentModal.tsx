@@ -49,19 +49,19 @@ export function ConsentModal({
 
   return (
     <Dialog onOpenChange={() => {}} open={open}>
-      <DialogContent className="gap-6 overflow-hidden rounded-2xl border-[#E4E4E4] p-8 text-[#111111] sm:max-w-sm">
+      <DialogContent className="gap-6 overflow-hidden rounded-2xl border-[var(--border)] bg-[var(--card)] p-8 text-[var(--foreground)] sm:max-w-sm">
         <div className="space-y-2 text-center">
-          <DialogTitle className="text-xl font-semibold text-[#111111]">
+          <DialogTitle className="text-xl font-semibold text-[var(--foreground)]">
             {COPY.consent.title}
           </DialogTitle>
-          <DialogDescription className="text-sm leading-6 text-[#666666]">
+          <DialogDescription className="text-sm leading-6 text-[var(--muted-foreground)]">
             {COPY.consent.body}
           </DialogDescription>
         </div>
 
         <div className="flex flex-col gap-3">
           <Button
-            className="h-10 w-full bg-[#111111] text-sm text-white hover:bg-[#222222]"
+            className="h-10 w-full bg-[var(--primary)] text-sm text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90"
             disabled={loading}
             onClick={handleConsent}
             type="button"
@@ -71,7 +71,7 @@ export function ConsentModal({
           </Button>
 
           <Button
-            className="h-10 w-full border border-[#E4E4E4] bg-white text-sm text-[#111111] hover:bg-[#F2F2F2]"
+            className="h-10 w-full border border-[var(--border)] bg-transparent text-sm text-[var(--foreground)] hover:bg-[var(--secondary)]"
             disabled={loading}
             onClick={handleDecline}
             type="button"

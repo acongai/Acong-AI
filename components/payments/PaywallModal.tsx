@@ -117,14 +117,14 @@ export function PaywallModal({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="border-[#E4E4E4] bg-white text-[#111111] sm:max-w-xl">
-        <DialogTitle className="text-xl font-semibold text-[#111111]">
+      <DialogContent className="border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] sm:max-w-xl">
+        <DialogTitle className="text-xl font-semibold text-[var(--foreground)]">
           {COPY.paywallTitle}
         </DialogTitle>
-        <DialogDescription className="text-sm leading-6 text-[#666666]">
+        <DialogDescription className="text-sm leading-6 text-[var(--muted-foreground)]">
           {COPY.paywallSubtitle}
         </DialogDescription>
-        <p className="text-xs text-[#666666]">
+        <p className="text-xs text-[var(--muted-foreground)]">
           Pesan kamu sudah disimpan. Akan terkirim setelah kredit terisi.
         </p>
 
@@ -138,7 +138,7 @@ export function PaywallModal({
 
         <div className="mt-4 flex items-center justify-end gap-3">
           <Button
-            className="h-9 rounded px-4 text-sm text-[#666666] hover:bg-[#F8F8F8] hover:text-[#111111]"
+            className="h-9 rounded px-4 text-sm text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"
             onClick={() => onOpenChange(false)}
             type="button"
             variant="ghost"
@@ -146,7 +146,7 @@ export function PaywallModal({
             Nanti aja
           </Button>
           <Button
-            className="h-9 rounded bg-[#111111] px-4 text-sm text-white hover:bg-[#222222]"
+            className="h-9 rounded bg-[var(--primary)] px-4 text-sm text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90"
             disabled={isLoading}
             onClick={() => {
               void handleCheckout()
@@ -159,7 +159,7 @@ export function PaywallModal({
 
         <div className="mt-2 flex justify-center">
           <button
-            className="text-xs text-[#666666] underline-offset-2 hover:text-[#111111] hover:underline disabled:opacity-50"
+            className="text-xs text-[var(--muted-foreground)] underline-offset-2 hover:text-[var(--foreground)] hover:underline disabled:opacity-50"
             disabled={isVerifying}
             onClick={() => void handleVerify()}
             type="button"

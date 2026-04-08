@@ -141,19 +141,19 @@ export function PricingPopup({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/60"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl" style={{ maxHeight: "90dvh" }}>
+      <div className="relative w-full max-w-2xl overflow-y-auto rounded-2xl bg-[var(--card)] shadow-xl" style={{ maxHeight: "90dvh" }}>
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-[#E4E4E4] bg-white px-6 py-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-[var(--border)] bg-[var(--card)] px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold text-[#111111]">Pilih Plan</h2>
-            <p className="text-sm text-[#666666]">Top up credits buat chat sama ACONG</p>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Pilih Plan</h2>
+            <p className="text-sm text-[var(--muted-foreground)]">Top up credits buat chat sama ACONG</p>
           </div>
           <button
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-[#666666] transition-colors hover:bg-[#F8F8F8] hover:text-[#111111]"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-[var(--muted-foreground)] transition-colors hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"
             onClick={onClose}
             type="button"
           >
@@ -189,30 +189,30 @@ export function PricingPopup({
                 <div
                   className={`flex flex-col overflow-hidden rounded-xl border-2 transition-all ${
                     isActive
-                      ? "border-[#111111]"
-                      : "border-[#E4E4E4] hover:border-[#AAAAAA]"
+                      ? "border-[var(--foreground)]"
+                      : "border-[var(--border)] hover:border-[var(--muted-foreground)]"
                   }`}
                 >
                 {/* Dark plan name header */}
-                <div className="bg-[#111111] px-4 py-3">
-                  <p className="text-sm font-bold text-white">{plan.name}</p>
+                <div className="bg-[var(--primary)] px-4 py-3">
+                  <p className="text-sm font-bold text-[var(--primary-foreground)]">{plan.name}</p>
                 </div>
 
                 {/* Card body */}
                 <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
-                  <p className="mb-3 text-xs text-[#666666]">{plan.subtitle}</p>
+                  <p className="mb-3 text-xs text-[var(--muted-foreground)]">{plan.subtitle}</p>
                   <div className="mb-3 flex items-center gap-1.5">
-                    <Coins className="h-4 w-4 text-[#666666]" />
-                    <p className="text-2xl font-bold text-[#111111]">{plan.credits}</p>
-                    <p className="text-xs text-[#999999]">credits</p>
+                    <Coins className="h-4 w-4 text-[var(--muted-foreground)]" />
+                    <p className="text-2xl font-bold text-[var(--foreground)]">{plan.credits}</p>
+                    <p className="text-xs text-[var(--muted-foreground)]/60">credits</p>
                   </div>
-                  <p className="mb-4 text-sm font-semibold text-[#111111]">{plan.price}</p>
+                  <p className="mb-4 text-sm font-semibold text-[var(--foreground)]">{plan.price}</p>
 
                   <button
                     className={`mt-auto w-full rounded px-3 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? "cursor-default bg-[#F2F2F2] text-[#999999]"
-                        : "bg-[#111111] text-white hover:bg-[#222222] disabled:opacity-60"
+                        ? "cursor-default bg-[var(--secondary)] text-[var(--muted-foreground)]"
+                        : "bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary)]/90 disabled:opacity-60"
                     }`}
                     disabled={isLoading || isActive}
                     onClick={() => void handleSelectPlan(plan)}
@@ -229,7 +229,7 @@ export function PricingPopup({
 
         {error ? (
           <div className="px-6 pb-4">
-            <p className="text-sm text-[#E5484D]">{error}</p>
+            <p className="text-sm text-[var(--destructive)]">{error}</p>
           </div>
         ) : null}
       </div>
