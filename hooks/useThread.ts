@@ -31,6 +31,8 @@ interface ThreadStateSnapshot {
   messages: AppMessage[]
   threadTitle: string | null
   threads: AppThread[]
+  type?: "individual" | "group"
+  metadata?: any
 }
 
 function getStatusFallback(status?: ChatMessageStatus | null) {
@@ -144,6 +146,8 @@ async function fetchThreadState({
       messages: [],
       threadTitle: null,
       threads: [],
+      type: "individual",
+      metadata: {}
     }
   }
 
@@ -195,12 +199,14 @@ async function fetchThreadState({
       messages: [],
       threadTitle: null,
       threads: toAppThreads(normalizedThreads, previews),
+      type: "individual",
+      metadata: {}
     }
   }
 
   const { data: currentThread, error: currentThreadError } = await supabase
     .from("chat_threads")
-    .select("id,title")
+    .select("id,title,type,metadata")
     .eq("id", threadId)
     .maybeSingle()
 
@@ -254,6 +260,8 @@ async function fetchThreadState({
     }),
     threadTitle: currentThread?.title ?? null,
     threads: toAppThreads(normalizedThreads, previews),
+    type: currentThread?.type as "individual" | "group",
+    metadata: currentThread?.metadata as any,
   }
 }
 
@@ -273,6 +281,8 @@ export function useThread({
   )
   const [threads, setThreads] = useState<AppThread[]>([])
   const [threadTitle, setThreadTitle] = useState<string | null>(null)
+  const [type, setType] = useState<"individual" | "group">("individual")
+  const [metadata, setMetadata] = useState<any>({})
   const router = useRouter()
   const { activeCharacter } = useCharacter()
 
@@ -297,6 +307,8 @@ export function useThread({
         setThreads(state.threads)
         setMessages(state.messages)
         setThreadTitle(state.threadTitle)
+        setType(state.type || "individual")
+        setMetadata(state.metadata || {})
       } catch (loadError) {
         if (cancelled) {
           return
@@ -336,6 +348,8 @@ export function useThread({
       setThreads(state.threads)
       setMessages(state.messages)
       setThreadTitle(state.threadTitle)
+      setType(state.type || "individual")
+      setMetadata(state.metadata || {})
     } catch (refreshError) {
       setError(
         refreshError instanceof Error
@@ -553,5 +567,7 @@ export function useThread({
     },
     threadTitle,
     threads,
+    type,
+    metadata,
   }
 }
