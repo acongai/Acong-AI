@@ -42,7 +42,7 @@ export function ChatShell({ threadId }: ChatShellProps) {
   const startGroupChat = thread.startGroupChat
   const failureMessage = copy.errorMessage
 
-  const hasMessages = messages.length > 0
+  const hasMessages = messages.length > 0 || (isLoading && Boolean(threadId))
   const handleLoginClosed = useEffectEvent(() => {
     void refresh()
     setDraft("")

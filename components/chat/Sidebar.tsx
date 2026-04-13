@@ -131,7 +131,7 @@ export function Sidebar({
           {userName ? (
             <>
               {accountMenuOpen && (
-                <div className="absolute bottom-full left-0 right-0 mb-1 overflow-hidden rounded-lg border border-[var(--sidebar-border)] bg-[var(--sidebar)] shadow-md">
+                <div className="absolute bottom-full left-0 right-0 z-50 mb-1 overflow-hidden rounded-lg border border-[var(--sidebar-border)] bg-[var(--sidebar)] shadow-md">
                   <button
                     className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-[var(--sidebar-foreground)] transition-colors hover:bg-[var(--sidebar-accent)]"
                     onClick={() => {
