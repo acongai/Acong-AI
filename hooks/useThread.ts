@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { toast } from "sonner"
@@ -283,6 +283,8 @@ export function useThread({
   const [threadTitle, setThreadTitle] = useState<string | null>(null)
   const [type, setType] = useState<"individual" | "group">("individual")
   const [metadata, setMetadata] = useState<any>({})
+  const isRefreshingRef = useRef(false)
+  const refreshQueuedRef = useRef(false)
   const router = useRouter()
   const { activeCharacter } = useCharacter()
 
@@ -335,6 +337,14 @@ export function useThread({
   }, [includeMessages, supabase, threadId])
 
   async function refresh() {
+    // If a refresh is already running, queue one and bail — the in-progress
+    // refresh will re-run when it finishes, picking up the latest DB state.
+    if (isRefreshingRef.current) {
+      refreshQueuedRef.current = true
+      return
+    }
+
+    isRefreshingRef.current = true
     setIsLoading(true)
 
     try {
@@ -357,7 +367,14 @@ export function useThread({
           : COPY.errorMessage,
       )
     } finally {
+      isRefreshingRef.current = false
       setIsLoading(false)
+
+      // If a caller requested a refresh while we were running, honour it now.
+      if (refreshQueuedRef.current) {
+        refreshQueuedRef.current = false
+        void refresh()
+      }
     }
   }
 

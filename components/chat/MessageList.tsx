@@ -44,9 +44,11 @@ export function MessageList({
       <ScrollArea className="h-full">
         <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col justify-end gap-4 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
           {messages.length ? (
-            messages.map((message, index) => (
-              <MessageBubble index={index} key={message.id} message={message} />
-            ))
+            messages
+              .filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index)
+              .map((message, index) => (
+                <MessageBubble index={index} key={message.id} message={message} />
+              ))
           ) : (
             <div className="flex flex-1 items-center justify-center">
               <EmptyState subtitle={emptySubtitle} title={emptyTitle} />
