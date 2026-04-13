@@ -29,8 +29,7 @@ export function MobileNav({
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    setAccountPopupOpen(false)
-    router.push("/")
+    window.location.href = "/"
   }
 
   useEffect(() => {

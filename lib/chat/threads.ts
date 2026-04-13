@@ -78,7 +78,7 @@ export async function createThread(userId: string, title?: string | null, type: 
   return data as ChatThreadRow
 }
 
-export async function touchThread(threadId: string, timestamp?: string) {
+export async function touchThread(threadId: string, userId: string, timestamp?: string) {
   const admin = createAdminClient()
   const nextTimestamp = timestamp ?? new Date().toISOString()
 
@@ -89,6 +89,7 @@ export async function touchThread(threadId: string, timestamp?: string) {
       updated_at: nextTimestamp,
     })
     .eq("id", threadId)
+    .eq("user_id", userId)
     .select("*")
     .single()
 

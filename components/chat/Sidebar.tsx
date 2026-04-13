@@ -55,7 +55,7 @@ export function Sidebar({
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push("/")
+    window.location.href = "/"
   }
 
   async function handleRenameProfile() {

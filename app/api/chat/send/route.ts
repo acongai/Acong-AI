@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     userId: user.id,
   })
 
-  await touchThread(initialThread.id, userMessage.created_at ?? undefined)
+  await touchThread(initialThread.id, user.id, userMessage.created_at ?? undefined)
   const thread = (await maybeGenerateThreadTitleFromMessage(user.id, initialThread.id, content)) ?? initialThread
 
   try {
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
       }
 
       results.push(assistantMessage)
-      await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
+      await touchThread(thread.id, user.id, assistantMessage.updated_at ?? undefined)
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err)
       const errStack = err instanceof Error ? err.stack : undefined

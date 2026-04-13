@@ -33,6 +33,14 @@ export interface OrchestratorResult {
   outputType: "text"
 }
 
+function sanitizePromptValue(value: string): string {
+  return value
+    .replace(/[\r\n]/g, " ")
+    .replace(/\0/g, "")
+    .trim()
+    .slice(0, 50)
+}
+
 export async function orchestrateTextReply({
   history,
   userInput,
@@ -70,17 +78,21 @@ export async function orchestrateTextReply({
     ? `${basePrompt}\n\n${locale === "en" ? "Additional instruction:\n- " : "Instruksi tambahan:\n- "}${getTypoRoastInstruction(locale)}`
     : basePrompt
 
+  const safeUserName = userName ? sanitizePromptValue(userName) : undefined
+  const safeUserGender = userGender ? sanitizePromptValue(userGender) : undefined
+  const safeLocalTime = localTime ? sanitizePromptValue(localTime) : undefined
+
   // Inject local time
-  if (localTime) {
-    systemPrompt += `\n\nSekarang jam ${localTime} waktu lokal user. Kamu bisa bereaksi ke waktu ini secara natural kalau relevan — tapi jangan dipaksain.`
+  if (safeLocalTime) {
+    systemPrompt += `\n\nSekarang jam ${safeLocalTime} waktu lokal user. Kamu bisa bereaksi ke waktu ini secara natural kalau relevan — tapi jangan dipaksain.`
   }
 
   // Personalized rules based on persona
   if (characterId === 'acong') {
     systemPrompt += `\n\nHARD RULE: Jangan pernah manggil user pake nama. Pake 'lo/gw' aja. Titik.`
-  } else if (userName && (characterId === 'mpok' || characterId === 'babeh')) {
-    const address = userGender === 'male' ? 'tong' : 'neng'
-    systemPrompt += `\n\nInstruksi Tambahan: Panggil user sesekali pake namanya (${userName}) atau '${address}'.`
+  } else if (safeUserName && (characterId === 'mpok' || characterId === 'babeh')) {
+    const address = safeUserGender === 'male' ? 'tong' : 'neng'
+    systemPrompt += `\n\nInstruksi Tambahan: Panggil user sesekali pake namanya (${safeUserName}) atau '${address}'.`
   }
 
   if (groupMemberIds && groupMemberIds.length > 0) {
@@ -90,7 +102,7 @@ export async function orchestrateTextReply({
       ? kickedIds.map(id => id === 'acong' ? 'Acong' : id === 'mpok' ? 'Mpok' : 'Babeh').join(', ')
       : null
 
-    systemPrompt += `\n\nAnggota grup yang aktif saat ini: ${activeNames}. User ini namanya ${userName || 'User'}, gendernya ${userGender || 'unknown'}.`
+    systemPrompt += `\n\nAnggota grup yang aktif saat ini: ${activeNames}. User ini namanya ${safeUserName || 'User'}, gendernya ${safeUserGender || 'unknown'}.`
     if (kickedNames) {
       systemPrompt += ` ${kickedNames} udah dikeluarin dari grup — kamu tau ini dan nggak perlu nunggu atau nyebut-nyebut mereka lagi.`
     }

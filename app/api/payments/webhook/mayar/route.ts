@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto"
 import { NextResponse } from "next/server"
 
 import {
@@ -11,7 +12,32 @@ import { COPY } from "@/lib/copy"
 import { createAdminClient } from "@/lib/db/client"
 import type { Json, PaymentEventInsert, PaymentEventRow } from "@/lib/db/types"
 
+function verifyWebhookToken(requestToken: string | null): boolean {
+  const secret = process.env.MAYAR_WEBHOOK_SECRET
+  if (!secret) {
+    // Token not configured — skip check
+    return true
+  }
+  if (!requestToken) {
+    return false
+  }
+  try {
+    return timingSafeEqual(Buffer.from(requestToken), Buffer.from(secret))
+  } catch {
+    // Buffer lengths differ — tokens don't match
+    return false
+  }
+}
+
 export async function POST(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const token = searchParams.get("token")
+
+  if (!verifyWebhookToken(token)) {
+    console.warn("payments_mayar_webhook_invalid_token", { ip: request.headers.get("x-forwarded-for") })
+    return NextResponse.json({ ok: true })
+  }
+
   const rawBody = await request.text()
 
   try {
@@ -81,7 +107,7 @@ export async function POST(request: Request) {
           external_event_id: parsedEvent.externalEventId,
           invoice_id: invoiceId,
         })
-        return NextResponse.json({ error: COPY.api.webhookGeneric }, { status: 402 })
+        return NextResponse.json({ ok: true })
       }
 
       await applyPaidPayment(payment)

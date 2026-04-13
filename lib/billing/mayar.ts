@@ -422,7 +422,7 @@ export async function processAwaitingPaymentMessage(userId: string) {
       userId,
     })
 
-    await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
+    await touchThread(thread.id, userId, assistantMessage.updated_at ?? undefined)
     return assistantMessage
   } catch (error) {
     console.error("awaiting_payment_generation_error", {

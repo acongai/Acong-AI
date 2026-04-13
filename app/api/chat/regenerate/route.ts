@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
     })
 
-    await touchThread(thread.id, assistantMessage.updated_at ?? undefined)
+    await touchThread(thread.id, user.id, assistantMessage.updated_at ?? undefined)
 
     return NextResponse.json({
       assistantMessage,
