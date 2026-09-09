@@ -1,6 +1,8 @@
 # Acong-AI
 
-Acong is a production-oriented V1 AI chat app built with Next.js, Supabase, Google Gemini, Tailwind, shadcn/ui, Framer Motion, and Mayar. The app enforces a credit wallet on every successful send/regenerate, grants 5 free credits on first login, supports image attachments, and keeps the assistant persona sarcastic but not genuinely harmful.
+> **Live App:** [acong.chat](https://acong.chat)
+
+Acong is a production-oriented AI chat app built with Next.js, Supabase, Google Gemini, Tailwind, shadcn/ui, Framer Motion, and Mayar. The app enforces a credit wallet on every successful send/regenerate, grants 5 free credits on first login, supports image attachments, and features an intentionally sarcastic, character-driven AI persona.
 
 ## Stack
 
@@ -30,13 +32,13 @@ cp .env.example .env.local
 
 3. Fill every variable in `.env.local`.
 
-4. Create a Supabase project and run the SQL in [migrations/001_initial_schema.sql](/Users/adranoer/Documents/ACONG%20AI/ACONG%20AI%20CODE/migrations/001_initial_schema.sql).
+4. Create a Supabase project and run the SQL in [migrations/001_initial_schema.sql](./migrations/001_initial_schema.sql).
 
 5. Create a public Supabase Storage bucket named `attachments`.
 
 6. In Supabase Auth, enable email magic links and add these redirect URLs:
    - `http://localhost:3000/auth/callback`
-   - your production callback URL, for example `https://your-domain.com/auth/callback`
+   - your production callback URL, for example `https://acong.chat/auth/callback`
 
 7. Start the dev server:
 
@@ -48,7 +50,7 @@ npm run dev
 
 ## Environment variables
 
-The exact template lives in [.env.example](/Users/adranoer/Documents/ACONG%20AI/ACONG%20AI%20CODE/.env.example).
+The exact template lives in [.env.example](./.env.example).
 
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL used by browser and server SSR clients.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anon key used by browser and SSR auth clients.
@@ -63,7 +65,7 @@ The exact template lives in [.env.example](/Users/adranoer/Documents/ACONG%20AI/
 
 1. Create a new Supabase project.
 
-2. Open SQL Editor and run the full contents of [migrations/001_initial_schema.sql](/Users/adranoer/Documents/ACONG%20AI/ACONG%20AI%20CODE/migrations/001_initial_schema.sql).
+2. Open SQL Editor and run the full contents of [migrations/001_initial_schema.sql](./migrations/001_initial_schema.sql).
 
 3. Create a Storage bucket named `attachments`.
    - Make it public if you want direct public image URLs to work exactly as implemented.
