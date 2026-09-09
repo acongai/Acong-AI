@@ -45,11 +45,7 @@ export function Sidebar({
 
   function handleNewThread() {
     onNavigate?.()
-    if (pathname === "/") {
-      window.location.href = "/"
-    } else {
-      router.push("/")
-    }
+    router.push("/")
   }
 
   async function handleSignOut() {
