@@ -1,20 +1,40 @@
 # Acong-AI
 
-> **Live App:** [acong.chat](https://acong.chat)
+> **Live Production App:** [https://acong.chat](https://acong.chat)
 
-Acong is a production-oriented AI chat app built with Next.js, Supabase, Google Gemini, Tailwind, shadcn/ui, Framer Motion, and Mayar. The app enforces a credit wallet on every successful send/regenerate, grants 5 free credits on first login, supports image attachments, and features an intentionally sarcastic, character-driven AI persona.
+Acong is a character-driven, entertainment-first AI chat web application. Unlike generic AI assistants, Acong and its family members feature distinct, intentionally sarcastic, cynical, and hilarious Indonesian personalities (using Jakarta/Betawi slang), while maintaining safe boundaries and delivering actual answers.
 
-## Stack
+---
 
-- Next.js App Router
-- TypeScript strict mode
-- Tailwind CSS
-- shadcn/ui
-- Framer Motion
-- Supabase Auth, Postgres, and Storage
-- Google Gemini `gemini-2.5-flash`
-- Mayar payments
-- ESLint
+## 🎭 The Characters
+
+- **Acong (Main Character):** The cynical, reluctant, and easily annoyed orangutan persona. Answers questions with peak sarcasm and dry wit.
+- **Mpok Hindun:** The gossipy, dramatic Betawi auntie persona who reacts with exaggerated flair.
+- **Babeh Sabeni:** The grumpy, old-fashioned, no-nonsense Betawi elder persona.
+
+---
+
+## ⚡ Key System Features
+
+- **Multi-Persona Group Chat:** Real-time multi-character banter in a single thread. Characters dynamically reply sequentially or respond based on mentions (e.g., `@Acong`, `@Mpok`, `@Babeh`).
+- **AI Engine:** Powered by Google Gemini (`gemini-2.5-flash`) with structured persona prompts, token constraints, and context window pruning.
+- **Multimodal Support:** Supports image uploads and visual queries analyzed directly by Gemini Vision.
+- **Credit Wallet & Payment System:** Enforces a strict server-side credit ledger. Integrated with Mayar payment gateway (QRIS & Virtual Accounts) for credit top-ups, with 5 free credits on onboarding.
+- **Bilingual & Localization:** Geo-IP detection and manual language toggle supporting both Indonesian (informal slang) and English.
+- **Modern UI/UX:** Responsive mobile-first interface with high-contrast Dark/Light mode, fluid Framer Motion animations, and shadcn/ui components.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework:** Next.js 16 (App Router) & React 19
+- **Language:** TypeScript (strict mode)
+- **Styling:** Tailwind CSS v4 & shadcn/ui
+- **Animations:** Framer Motion
+- **Backend & Database:** Supabase (Auth passwordless magic-link, PostgreSQL with Row Level Security, Storage)
+- **AI Model:** Google Gemini (`gemini-2.5-flash`)
+- **Payments:** Mayar Indonesian Payment Gateway
+- **Deployment:** Vercel ([acong.chat](https://acong.chat))
 
 ## Local setup
 
